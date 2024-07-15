@@ -5,7 +5,7 @@ Translation note:
 2. All the comments are for explanation, they are not for translation.
 -->
 <NotepadPlus>
-	<Native-Langue name="Dansk" filename="danish.xml" version="8.6.1">
+	<Native-Langue name="Dansk" filename="danish.xml" version="8.6.8">
 		<Menu>
 			<Main>
 				<!-- Main Menu Entries -->
@@ -222,7 +222,7 @@ Translation note:
 					<Item id="43051" name="Fjern umærkede linier"/>
 					<Item id="43050" name="Invertér bogmærker"/>
 					<Item id="43052" name="Find i interval..."/>
-					<Item id="43053" name="Markér alt mellem tilhørende parenteser"/>
+					<Item id="43053" name="Markér alt mellem {} [] eller ()"/>
 					<Item id="43009" name="Gå til tilhørende parentes"/>
 					<Item id="43010" name="Find &amp;forrige"/>
 					<Item id="43011" name="Tr&amp;invis søgning"/>
@@ -355,6 +355,7 @@ Translation note:
 					<Item id="10005" name="Flyt til starten"/>
 					<Item id="10006" name="Flyt til enden"/>
 					<Item id="46001" name="Udseende..."/>
+					<Item id="46016" name="Ingen (normal tekst)"/>
 					<Item id="46250" name="Opret/tilpas sprog..."/>
 					<Item id="46300" name="Sprogmappe..."/>
 					<Item id="46301" name="Sprogsamling på GitHub.com"/>
@@ -439,6 +440,8 @@ Translation note:
 				<Item CMDID="42030" name="Filnavn"/>
 				<Item CMDID="42031" name="Mappesti"/>
 				<Item CMDID="3" name="Flyt"/>
+				<Item CMDID="10005" name="Flyt til start"/>
+				<Item CMDID="10006" name="MFlyt til slut"/>
 				<Item CMDID="10001" name="Flyt til anden visning"/>
 				<Item CMDID="10002" name="Klon til anden visning"/>
 				<Item CMDID="10003" name="Flyt til ny instans"/>
@@ -968,7 +971,8 @@ Translation note:
 
 					<Item id="6123" name="Oversættelse"/>
 				</Global>
-				<Scintillas title="Redigering">
+
+				<Scintillas title="Redigering 1">
 					<Item id="6216" name="Markørindstillinger"/>
 					<Item id="6217" name="Bredde:"/>
 					<Item id="6219" name="Blinkhastighed:"/>
@@ -984,21 +988,30 @@ Translation note:
 					<Item id="6236" name="Rul forbi sidste linie"/>
 					<Item id="6239" name="Behold markering ved højreklik uden for denne"/>
 					<Item id="6245" name="Aktivér virtuelle mellemrum"/>
+					<Item id="6214" name="Aktivér kopiér/klip linie uden markering"/>
 					<Item id="6651" name="Aktuel linie"/>
 					<Item id="6652" name="Ingen markering"/>
 					<Item id="6653" name="Fremhæv baggrund"/>
 					<Item id="6654" name="Rammemarkering"/>
 					<Item id="6655" name="Bredde"/>
+				</Scintillas>
+
+				<Scintillas2 title="Redigering 2">
+					<Item id="6521" name="Multiredigering"/>
+					<Item id="6522" name="Aktivér multiredigering (Ctr + klik/markering)"/>
+					<Item id="6523" name="Aktivér kolonnemarkering til multiredigering"/>
 					<Item id="6247" name="EOL (CRLF)"/><!-- Don't translate "(CRLF)" -->
 					<Item id="6248" name="Standard"/>
 					<Item id="6249" name="Almen tekst"/>
 					<Item id="6250" name="Farve"/>
 					<Item id="6252" name="Ikke printbare tegn"/>
+					<Item id="6260" name="Udseende"/>
 					<Item id="6254" name="Forkortelse"/>
 					<Item id="6255" name="Kodepunkt"/>
 					<Item id="6256" name="Farve"/>
 					<Item id="6258" name="Anvend på C0, C1 &amp; Unicode EOL"/>
-				</Scintillas>
+					<Item id="6259" name="Forbyd at  kontroltegn (C0 kode) skrives til dokument"/>
+				</Scintillas2>
 
 				<DarkMode title="Mørkt tema">
 					<Item id="7131" name="Lyst tema"/>
@@ -1040,11 +1053,11 @@ Translation note:
 					<Item id="6292" name="Dynamisk bredde"/>
 					<Item id="6293" name="Konstant bredde"/>
 					<Item id="6207" name="Vis bogmærker"/>
-					<Item id="6223" name="Vis ændringshistorik"/>
-					<Item id="6211" name="Kolonnemarkører"/>
+					<Item id="6295" name="Ændringshistorik"/>
+					<Item id="6223" name="Vis i margen"/>
+					<Item id="6296" name="Vis i tekst"/>
+					<Item id="6211" name="Lodrette kanter"/>
 					<Item id="6213" name="I baggrunden"/>
-					<Item id="6237" name="Angiv kolonnemarkørs placering med et decimaltal.
-Brug mellemrum til at angive flere markører."/>
 					<Item id="6231" name="Kantbredde"/>
 					<Item id="6235" name="Ingen kant"/>
 					<Item id="6208" name="Polstring"/>
@@ -1082,17 +1095,29 @@ Brug mellemrum til at angive flere markører."/>
 					<Item id="4009" name="Understøttede filtyper:"/>
 					<Item id="4010" name="Tilknyttede filtyper:"/>
 				</FileAssoc>
+
+
 				<Language title="Sprog">
 					<Item id="6505" name="Tilgængelige"/>
 					<Item id="6506" name="Deaktiverede"/>
 					<Item id="6507" name="Kompakt sprogmenu"/>
 					<Item id="6508" name="Sprogmenu"/>
-					<Item id="6301" name="Tabulator"/>
-					<Item id="6302" name="Erstat med mellemrum"/>
-					<Item id="6303" name="Størrelse: "/>
-					<Item id="6510" name="Brug standardværdi"/>
-					<Item id="6335" name="Behandl omvendt skråstreg som escapetegn for SQL"/>
+					<Item id="6335" name="Brug omvendt skråstreg som escapetegn for SQL"/>
 				</Language>
+
+				<Indentation title="Indrykning">
+					<Item id="7161" name="Automatisk"/>
+					<Item id="7162" name="Ingen"/>
+					<Item id="7163" name="Simpel"/>
+					<Item id="7164" name="Avanceret"/>
+					<Item id="6301" name="Indstillinger"/>
+					<Item id="6302" name="Mellemrum"/>
+					<Item id="6303" name="Størrelse: "/>
+					<Item id="6310" name="Indryk med:"/>
+					<Item id="6311" name="Tabulatortegn"/>
+					<Item id="6510" name="Brug standardværdi"/>
+					<Item id="6512" name="Backspace fjerner indryk (erstatter normal brug)"/>
+				</Indentation>
 
 				<Highlighting title="Fremhævning">
 					<Item id="6351" name="Mærk alle forekomster"/>
@@ -1176,7 +1201,7 @@ Brug mellemrum til at angive flere markører."/>
 				<Backup title="Sikkerhedskopiering">
 					<Item id="6817" name="Sessionsbillede og periodisk sikkerhedskopi"/>
 					<Item id="6818" name="Aktivér sessionsbillede og periodisk sikkerhedskopi"/>
-					<Item id="6819" name="Sikkerhedskopiér hvert"/>
+					<Item id="6819" name="Sikkerhedskopiér ved ændring hvert"/>
 					<Item id="6821" name="sekund"/>
 					<Item id="6822" name="Placering:"/>
 					<Item id="6309" name="Husk aktuel session ved næste opstart"/>
@@ -1249,7 +1274,7 @@ Brug mellemrum til at angive flere markører."/>
 					<Item id="7141" name="Begræns store filer"/>
 					<Item id="7143" name="Aktivér begrænsning (ingen syntaks fremhævning)"/>
 					<Item id="7144" name="Definér filstørrelse:"/>
-					<Item id="7146" name="MB   (1 - 4096)"/>
+					<Item id="7146" name="MB   (1 - 2046)"/>
 					<Item id="7147" name="Tillad parantesmatch"/>
 					<Item id="7148" name="Tillad autofuldførelse"/>
 					<Item id="7149" name="Tillad smart fremhævning"/>
@@ -1282,7 +1307,7 @@ Brug mellemrum til at angive flere markører."/>
 
 				<MISC title="Diverse">
 					<ComboBox id="6347">
-						<Element name="Aktivér"/>
+						<Element name="Aktivér for aktuel fil"/>
 						<Element name="Aktivér for alle åbne filer"/>
 						<Element name="Deaktivér"/>
 					</ComboBox>
@@ -1509,6 +1534,10 @@ Vil du oprette disse pladsholdere?
 BEMÆRK: Hvis du ikke opretter pladsholderne, eller lukker dem senere, ÆNDRES SESSIONEN ved lukning! Vi foreslår at sikkerhedskopierer din &quot;session.xml&quot; now."/>
                         <RTLvsDirectWrite title="Kan ikke køre RTL" message="RTL er ikke kompatibel med DirectWrite. Deaktivér DirectWrite i Indstillinger => Diverse og genstart Notepad++"/>
 			<FileMemoryAllocationFailed title="Bemærk: Hukommelsestildeling fejlede" message="Der mangler sandsynligvis hukommelse til at indlæse filen i Notepad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<FindRegexBackwardDisabled title="Baglæns RegEx deaktiveret" message="Som standard, er baglæns søgning for regulære udtryk, deaktiveret p.g.a. potientielt uvented resultater. Brug normal eller udvidet tilstand, hvis du vil søge baglæns.
+Klik OK for at åbne eller fokusere søgedialogen.
+			
+Se brugermanualen hvis du vil aktivere baglæns Regulære udtryk."/>
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="Kopieringshistorik"/>
@@ -1632,7 +1661,6 @@ BEMÆRK: Hvis du ikke opretter pladsholderne, eller lukker dem senere, ÆNDRES S
 			<default-open-save-select-folder value="Vælg standardmappe"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Brug Skift+Enter til at søge i modsat retning"/>
 			<two-find-buttons-tip value="Frem/tilbage knapper"/>
-			<file-rename-title value="Omdøb"/>
 			<find-in-files-filter-tip value="Find i cpp, cxx, h, hxx og hpp:
 *.cpp *.cxx *.h *.hxx *.hpp
 
@@ -1645,8 +1673,8 @@ Find i alle filer, undtagen i mapperne test, bin og bin64:
 Find i alle filer, undtagen i mapperne log med undermapper:
 *.* !+\log*"/><!-- HowToReproduce: Tip of mouse hovered on "Filters" label in "Find in Files" section of Find dialog. -->
 			<find-in-files-select-folder value="Vælg mappe"/><!-- HowToReproduce: Search > Find in Files > [...] -->
-			<find-status-top-reached value="Fandt 1. forekomst fra bunden. Toppen af dokumentet er nået."/>
-			<find-status-end-reached value="Fandt 1. forekomst fra toppen. Enden af dokumentet er nået."/>
+			<find-status-top-reached value="Fandt sidste forekomst fra bunden. Toppen af dokumentet er nået."/>
+			<find-status-end-reached value="Fandt sidste forekomst fra toppen. Enden af dokumentet er nået."/>
 			<find-status-replaceinfiles-1-replaced value="1  forekomst blev erstattet"/>
 			<find-status-replaceinfiles-nb-replaced value="$INT_REPLACE$ forekomster blev erstattet"/>
 			<find-status-replaceinopenedfiles-1-replaced value="1 forekomst blev erstattet"/>
@@ -1660,8 +1688,8 @@ Find i alle filer, undtagen i mapperne log med undermapper:
 			<find-status-replaceall-1-replaced value="1 forekomst blev erstattet"/>
 			<find-status-replaceall-nb-replaced value="$INT_REPLACE$ forekomster blev erstattet"/>
 			<find-status-replaceall-readonly value="Kan ikke erstatte tekst. Dokumentet er skrivebeskyttet"/>
-			<find-status-replace-end-reached value="1. forekomst fra toppen erstattet. Enden af dokumentet er nået"/>
-			<find-status-replace-top-reached value="1. forekomst erstattet. Toppen af dokumentet er nået"/>
+			<find-status-replace-end-reached value="Sidste forekomst fra toppen erstattet. Enden af dokumentet er nået"/>
+			<find-status-replace-top-reached value="Sidste forekomst erstattet. Toppen af dokumentet er nået"/>
 			<find-status-replaced-next-found value="1 forekomst erstattet. Næste fundet."/>
 			<find-status-replaced-without-continuing value="1 erstattet."/>
 			<find-status-replaced-next-not-found value="1 forekomst erstattet. Der er ikke flere."/>
@@ -1678,9 +1706,7 @@ Find i alle filer, undtagen i mapperne log med undermapper:
 			<finder-collapse-all value="Sammenfold alle"/>
 			<finder-uncollapse-all value="Udvid alle"/>
 			<finder-copy value="Kopiér valgte linie(r)"/>
-			<finder-copy value="Kopier"/>
 			<finder-copy-paths value="Kopiér stinavn(e)"/>
-			<finder-select-all value="Markér alle"/>
 			<finder-clear-all value="Ryd alle"/>
 			<finder-open-all value="Åbn alle"/>
 			<finder-purge-for-every-search value="Ryd ved ny søgning"/>
@@ -1707,7 +1733,6 @@ Find i alle filer, undtagen i mapperne log med undermapper:
 			<summary-nbsel2 value=" bit) i "/>
 			<summary-nbrange value=" områder"/>
 			<progress-hits-title value="Antal:"/>
-			<progress-cancel-button value="Annuller"/>
 			<progress-cancel-info value="Annullerer handling, vent venligst..."/>
 			<find-in-files-progress-title value="Søgefremskridt..."/>
 			<replace-in-files-confirm-title value="Er du sikker?"/>
@@ -1776,6 +1801,13 @@ Klik på &quot;?&quot; for at åbne online manualen."/>
 			<npcCustomColor-tip value="Gå til  Indstillinger => Udseende... for at tilpasse farven for mellemrum og ikke printbare tegn (&quot;Non-printing characters custom color&quot;)."/>
 			<npcIncludeCcUniEol-tip value="Anvend ikke printbare tegns effekter på C0, C1 kontroller og Unicode EOL (næste linie, linieskift og paragraffer) tegn."/>
 			<searchingInSelThresh-tip value="Antal valgte tegn i tekstvinduet, der automatisk sætter flueben ved &quot;I markering&quot; i søgedialogen. Maksimum er 1024. Sæt til 0 for at deaktivere."/>
+			<verticalEdge-tip value="Angiv kolonnemarkørs placering med et decimaltal. Brug mellemrum til at angive flere markører."/>
+                        <autoIndentBasic-tip value="Kontrollér at aktuel linies indrykning (f.eks. ny linie med Enter) er den samme som forrige linie."/>
+			<autoIndentAdvanced-tip value="Aktivér smart indrykning for C lignende sprog og Python. C lignende sprog inkluderer:
+C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell og JSON
+
+Vælger du avanceret, uden at redigere filer med førnævnte sprog, forbliver indrykningen simpel."/>
 		</MiscStrings>
 	</Native-Langue>
 </NotepadPlus>
+

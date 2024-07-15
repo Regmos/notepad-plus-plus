@@ -5,17 +5,18 @@ Translation note:
 2. All the comments are for explanation, they are not for translation.
 -->
 <!--
-    History of Polish translation for Notepad++:
+	History of Polish translation for Notepad++:
 
-        - Updated by Arkadiusz Michalski (webref.pl) to version 8.5.5 (02.08.2023)
-        - Updated by Cezariusz Marek to version 7.8.3 (11.01.2020)
-        - Translated by Patryk Skorupa (ppskorupa@outlook.com) and up-to-date as of version 7.7.2 (29/07/2019)
+		- Updated by Arkadiusz Michalski (webref.pl) to version 8.6.9 (05.07.2024)
+		- Updated by Cezariusz Marek to version 7.8.3 (11.01.2020)
+		- Translated by Patryk Skorupa (ppskorupa@outlook.com) and up-to-date as of version 7.7.2 (29/07/2019)
+		- Translated by Piotr Kostrzewski (piotrkostrzewski2@@outlook.com) and up-to-date as of version 8.6.6 (02.04.2024)
 
-    The most recent version of this file can usually be downloaded from:
-        https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/installer/nativeLang/polish.xml
+	The most recent version of this file can usually be downloaded from:
+		https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/installer/nativeLang/polish.xml
 -->
 <NotepadPlus>
-	<Native-Langue name="polski" filename="polish.xml" version="8.5.5">
+	<Native-Langue name="polski" filename="polish.xml" version="8.6.9">
 		<Menu>
 			<Main>
 				<!-- Główne menu -->
@@ -41,7 +42,7 @@ Translation note:
 					<Item subMenuId="edit-insert" name="Wstaw"/>
 					<Item subMenuId="edit-copyToClipboard" name="Kopiuj do schowka"/>
 					<Item subMenuId="edit-indent" name="Wcięcie"/>
-					<Item subMenuId="edit-convertCaseTo" name="Wielkość liter"/>
+					<Item subMenuId="edit-convertCaseTo" name="Konwertuj wielkość liter na"/>
 					<Item subMenuId="edit-lineOperations" name="Działania na liniach"/>
 					<Item subMenuId="edit-comment" name="Komentarze"/>
 					<Item subMenuId="edit-autoCompletion" name="Autouzupełnianie"/>
@@ -49,8 +50,10 @@ Translation note:
 					<Item subMenuId="edit-blankOperations" name="Działania na białych znakach"/>
 					<Item subMenuId="edit-pasteSpecial" name="Wklej specjalnie"/>
 					<Item subMenuId="edit-onSelection" name="Z zaznaczenia"/>
+					<Item subMenuId="edit-multiSelectALL" name="Multi zaznacz wszystko"/>
+					<Item subMenuId="edit-multiSelectNext" name="Multi zaznacz następne"/>
 					<Item subMenuId="search-changeHistory" name="Historia zmian"/>
-					<Item subMenuId="search-markAll" name="Wyróżnij każde"/>
+					<Item subMenuId="search-markAll" name="Wyróżnij wszystko"/>
 					<Item subMenuId="search-markOne" name="Wyróżnij jedno"/>
 					<Item subMenuId="search-unmarkAll" name="Usuń wyróżnienia"/>
 					<Item subMenuId="search-jumpUp" name="Przejdź wyżej"/>
@@ -58,7 +61,7 @@ Translation note:
 					<Item subMenuId="search-copyStyledText" name="Kopiuj ostylowany tekst"/>
 					<Item subMenuId="search-bookmark" name="Zakładki"/>
 					<Item subMenuId="view-currentFileIn" name="Wyświetl bieżący plik w..."/>
-					<Item subMenuId="view-showSymbol" name="Niewidoczne znaki"/>
+					<Item subMenuId="view-showSymbol" name="Pokaż znaki i symbole"/>
 					<Item subMenuId="view-zoom" name="Powiększenie"/>
 					<Item subMenuId="view-moveCloneDocument" name="Bieżący dokument"/>
 					<Item subMenuId="view-tab" name="Karty"/>
@@ -152,18 +155,28 @@ Translation note:
 					<Item id="42066" name="Sortuj malejąco jako liczby dziesiętne z kropką"/>
 					<Item id="42083" name="Odwróć kolejność linii"/>
 					<Item id="42078" name="Losowa kolejność linii"/>
-					<Item id="42016" name="&amp;MAJUSKUŁY"/>
-					<Item id="42017" name="mi&amp;nuskuły"/>
+					<Item id="42016" name="&amp;WIELKIE LITERY"/>
+					<Item id="42017" name="&amp;małe litery"/>
 					<Item id="42067" name="Jak Nazwy &amp;Własne"/>
-					<Item id="42068" name="Jak Nazwy Własne (zostaw MAJUSKUŁY)"/>
+					<Item id="42068" name="Jak Nazwy Własne (zostaw WIELKIE LITERY)"/>
 					<Item id="42069" name="Jak w &amp;zdaniach"/>
-					<Item id="42070" name="Jak w zdaniach (zostaw MAJUSKUŁY)"/>
+					<Item id="42070" name="Jak w zdaniach (zostaw WIELKIE LITERY)"/>
 					<Item id="42071" name="&amp;oDWRÓĆ wIELKOŚĆ lITER"/>
 					<Item id="42072" name="&amp;loSoWA WIelKość liTEr"/>
 					<Item id="42073" name="Otwórz plik"/>
 					<Item id="42074" name="Otwórz folder zawierający w eksploratorze plików"/>
 					<Item id="42075" name="Wyszukaj w Internecie"/>
 					<Item id="42076" name="Zmień wyszukiwarkę..."/>
+					<Item id="42090" name="Ignoruj wielkość liter i całe wyrazy"/>
+					<Item id="42091" name="Patrz tylko na wielkość liter"/>
+					<Item id="42092" name="Patrz tylko na całe wyrazy"/>
+					<Item id="42093" name="Patrz na wielkość liter i całe wyrazy"/>
+					<Item id="42094" name="Ignoruj wielkość liter i całe wyrazy"/>
+					<Item id="42095" name="Patrz tylko na wielkość liter"/>
+					<Item id="42096" name="Patrz tylko na całe wyrazy"/>
+					<Item id="42097" name="Patrz na wielkość liter i całe wyrazy"/>
+					<Item id="42098" name="Anuluj ostatnio dodane multi zaznaczenie"/>
+					<Item id="42099" name="Anuluj bieżące i wykonaj następne multi zaznaczenie"/>
 					<Item id="42018" name="Rozpocznij &amp;nagrywanie"/>
 					<Item id="42019" name="&amp;Zatrzymaj nagrywanie"/>
 					<Item id="42021" name="&amp;Odtwórz"/>
@@ -302,6 +315,8 @@ Translation note:
 					<Item id="44092" name="7. karta"/>
 					<Item id="44093" name="8. karta"/>
 					<Item id="44094" name="9. karta"/>
+					<Item id="44116" name="Pierwsza karta"/>
+					<Item id="44117" name="Ostatnia karta"/>
 					<Item id="44095" name="Następna karta"/>
 					<Item id="44096" name="Poprzednia karta"/>
 					<Item id="44097" name="Monitorowanie pliku (tail -f)"/>
@@ -344,12 +359,12 @@ Translation note:
 					<Item id="45057" name="OEM 865: nordycki"/>
 					<Item id="45053" name="OEM 860: portugalski"/>
 					<Item id="45056" name="OEM 863: francuski"/>
-
 					<Item id="10001" name="Przenieś do drugiego widoku"/>
 					<Item id="10002" name="Klonuj do drugiego widoku"/>
 					<Item id="10003" name="Przenieś do nowego okna"/>
 					<Item id="10004" name="Otwórz w nowym oknie"/>
-
+					<Item id="10005" name="Przenieś kartę na początek"/>
+					<Item id="10006" name="Przenieś kartę na koniec"/>
 					<Item id="46001" name="Konfigurator stylów..."/>
 					<Item id="46250" name="Zdefiniuj własny język..."/>
 					<Item id="46300" name="Otwórz folder ze zdefiniowanymi językami..."/>
@@ -399,15 +414,15 @@ Translation note:
 					<Item id="48016" name="Zmień skrót/Usuń makro..."/>
 					<Item id="48017" name="Zmień skrót/Usuń polecenie..."/>
 
-					<Item id="11001" name="K&amp;arty..."/>
+					<Item id="11001" name="Okno z k&amp;artami..."/>
 					<Item id="11002" name="Nazwy od A do Z"/>
 					<Item id="11003" name="Nazwy od Z do A"/>
 					<Item id="11004" name="Ścieżki od A do Z"/>
 					<Item id="11005" name="Ścieżki od Z do A"/>
 					<Item id="11006" name="Typu od A do Z"/>
 					<Item id="11007" name="Typu od Z do A"/>
-					<Item id="11008" name="Rozmiaru od mniejszego do większego"/>
-					<Item id="11009" name="Rozmiaru od większego do mniejszego"/>
+					<Item id="11008" name="Rozmiaru od najmniejszego do największego"/>
+					<Item id="11009" name="Rozmiaru od największego do najmniejszego"/>
 				</Commands>
 			</Main>
 			<TabBar>
@@ -435,6 +450,8 @@ Translation note:
 				<Item CMDID="42030" name="Kopiuj nazwę pliku"/>
 				<Item CMDID="42031" name="Kopiuj ścieżkę katalogu pliku"/>
 				<Item CMDID="3" name="Przenieś dokument"/>
+				<Item CMDID="10005" name="Przenieś na początek"/>
+				<Item CMDID="10006" name="Przenieś na koniec"/>
 				<Item CMDID="10001" name="Przenieś do drugiego widoku"/>
 				<Item CMDID="10002" name="Klonuj do drugiego widoku"/>
 				<Item CMDID="10003" name="Przenieś do nowego okna"/>
@@ -450,7 +467,7 @@ Translation note:
 			<TrayIcon>
 				<Item id="43101" name="Pokaż"/>
 				<Item id="43102" name="Nowy"/>
-				<Item id="43103" name="Nowy i wklej ze schowka"/>
+				<Item id="43103" name="Nowy i wklej"/>
 				<Item id="43104" name="Otwórz..."/>
 				<Item id="43013" name="Szukaj w plikach..."/>
 				<Item id="43105" name="Zakończ"/>
@@ -509,8 +526,8 @@ Translation note:
 
 			<IncrementalFind title="">
 				<Item id="1681" name="Znajdź:"/>
-				<Item id="1685" name="Uwzględnij wielkość liter"/>
-				<Item id="1690" name="Podświetl wszystkie"/>
+				<Item id="1685" name="Uw&amp;zględnij wielkość liter"/>
+				<Item id="1690" name="P&amp;odświetl wszystkie"/>
 			</IncrementalFind>
 
 			<FindCharsInRange title="Szukanie znaków z zakresu">
@@ -651,17 +668,7 @@ Translation note:
 				<ScintillaCommandsTab name="Polecenia Scintilli"/>
 				<ConflictInfoOk name="Brak sprzecznego skrótu dla tej pozycji."/>
 				<ConflictInfoEditing name="Brak sprzeczności."/>
-				<WindowCategory name="Karty"/>
-				<FileCategory name="Plik"/>
-				<EditCategory name="Edycja"/>
-				<SearchCategory name="Szukaj"/>
-				<ViewCategory name="Widok"/>
-				<FormatCategory name="Format"/>
-				<LangCategory name="Składnia"/>
 				<AboutCategory name="O programie (?)"/>
-				<SettingCategory name="Ustawienia"/>
-				<ToolCategory name="Narzędzia"/>
-				<ExecuteCategory name="Uruchom"/>
 				<ModifyContextMenu name="Zmień"/>
 				<DeleteContextMenu name="Usuń"/>
 				<ClearContextMenu name="Wyczyść"/>
@@ -755,8 +762,8 @@ Translation note:
 					<Item id="11005" name="Sortuj karty względem ścieżki od Z do A"/>
 					<Item id="11006" name="Sortuj karty względem typu od A do Z"/>
 					<Item id="11007" name="Sortuj karty względem typu od Z do A"/>
-					<Item id="11008" name="Sortuj karty względem rozmiaru od mniejszego do większego"/>
-					<Item id="11009" name="Sortuj karty względem rozmiaru od większego do mniejszego"/>
+					<Item id="11008" name="Sortuj karty względem rozmiaru od najmniejszego do największego"/>
+					<Item id="11009" name="Sortuj karty względem rozmiaru od największego do najmniejszego"/>
 				</MainCommandNames>
 			</ShortcutMapper>
 			<ShortcutMapperSubDialg title="Skrót">
@@ -974,14 +981,14 @@ Translation note:
 
 					<Item id="6123" name="Język interfejsu"/>
 				</Global>
-				<Scintillas title="Edycja">
+
+				<Scintillas title="Edycja 1">
 					<Item id="6216" name="Kursor"/>
 					<Item id="6217" name="Szerokość:"/>
 					<Item id="6219" name="Miganie:"/>
 					<Item id="6221" name="S"/>
 					<Item id="6222" name="W"/>
 					<Item id="6246" name="Zezwól na przełączanie poleceń zwijania/rozwijania bieżącego poziomu"/>
-					<Item id="6225" name="Włącz edycję wieloliniową (Ctrl + klik LPM/zaznaczanie)"/>
 					<Item id="6227" name="Zawijanie tekstu"/>
 					<Item id="6228" name="Domyślne"/>
 					<Item id="6229" name="Wyrównane"/>
@@ -991,21 +998,30 @@ Translation note:
 					<Item id="6236" name="Umożliwiaj przewijanie poza ostatnią linię"/>
 					<Item id="6239" name="Zachowaj zaznaczenie po kliku prawym przyciskiem myszy poza zaznaczeniem"/>
 					<Item id="6245" name="Włącz wirtualny odstęp"/>
+					<Item id="6214" name="Włącz kopiowanie/wycinanie linii bez jej zaznaczania"/>
 					<Item id="6651" name="Wskaźnik bieżącej linii"/>
 					<Item id="6652" name="Brak"/>
 					<Item id="6653" name="Podświetlane tło"/>
 					<Item id="6654" name="Ramka"/>
 					<Item id="6655" name="Szerokość:"/>
+				</Scintillas>
+
+				<Scintillas2 title="Edycja 2">
+					<Item id="6521" name="Multi Edycja"/>
+					<Item id="6522" name="Włącz multi edycję (Ctrl + kliknięcie/wybór myszą)"/>
+					<Item id="6523" name="Traktuj kolumnowy tryb zaznaczania jak multi edycję"/>
 					<Item id="6247" name="EOL (CRLF)"/><!-- Don't translate "(CRLF)" -->
 					<Item id="6248" name="Domyślny"/>
 					<Item id="6249" name="Zwykły tekst"/>
 					<Item id="6250" name="Własny kolor"/>
 					<Item id="6252" name="Znaki niedrukowane"/>
+					<Item id="6260" name="Wygląd"/>
 					<Item id="6254" name="Skrót"/>
 					<Item id="6255" name="Kod"/>
 					<Item id="6256" name="Własny kolor"/>
-					<Item id="6258" name="Zastosuj do C0, C1 i EOL z Unicode"/>
-				</Scintillas>
+					<Item id="6258" name="Zastosuj ustawienia wyglądu do C0,C1 i Unicode EOL"/>
+					<Item id="6259" name="Zapobiegaj wpisywania znaku kontrolnego (kod C0) do dokumentu"/>
+				</Scintillas2>
 
 				<DarkMode title="Tryb ciemny">
 					<Item id="7131" name="Tryb jasny"/>
@@ -1047,11 +1063,11 @@ Translation note:
 					<Item id="6292" name="Dynamiczna szerokość"/>
 					<Item id="6293" name="Stała szerokość"/>
 					<Item id="6207" name="Pokazuj zakładki"/>
-					<Item id="6223" name="Pokazuj historię zmian"/>
+					<Item id="6295" name="Historia zmian"/>
+					<Item id="6223" name="Pokaż na marginesie"/>
+					<Item id="6296" name="Pokaż w tekście"/>
 					<Item id="6211" name="Ustawienia krawędzi pionowej"/>
 					<Item id="6213" name="Podświetlenie tła"/>
-					<Item id="6237" name="Dodaj znacznik kolumny, wskazując jego pozycję za pomocą liczby dziesiętnej.
-Możesz zdefiniować kilka znaczników kolumn poprzez rozdzielenie różnych liczb znakami spacji."/>
 					<Item id="6231" name="Grubość ramki"/>
 					<Item id="6235" name="Brak obrysu"/>
 					<Item id="6208" name="Odstęp wewnętrzny"/>
@@ -1089,15 +1105,19 @@ Możesz zdefiniować kilka znaczników kolumn poprzez rozdzielenie różnych lic
 					<Item id="4009" name="Wspierane rozszerzenia:"/>
 					<Item id="4010" name="Zarejestrowane rozszerzenia:"/>
 				</FileAssoc>
+
 				<Language title="Języki">
 					<Item id="6505" name="Dostępne"/>
 					<Item id="6506" name="Wyłączone"/>
 					<Item id="6507" name="Kompaktowe menu języków"/>
 					<Item id="6508" name="Menu języków"/>
-					<Item id="6301" name="Ustawienia tabulacji"/>
-					<Item id="6302" name="Zastąp spacją"/>
-					<Item id="6303" name="Rozmiar tabulacji:"/>
+					<Item id="6301" name="Ustawienia wcięć"/>
+					<Item id="6302" name="Znaku/znaków spacji"/>
+					<Item id="6303" name="Rozmiar wcięcia:"/>
+					<Item id="6310" name="Wcięcie za pomocą:"/>
+					<Item id="6311" name="Znaku tabulacji"/>
 					<Item id="6510" name="Używaj domyślnej wartości"/>
+					<Item id="6512" name="Klawisz Backspace usuwa wcięcia zamiast usuwać pojedyncze spacje"/>
 					<Item id="6335" name="Używaj „\” jako znaku ucieczki SQL"/>
 				</Language>
 
@@ -1162,10 +1182,11 @@ Możesz zdefiniować kilka znaczników kolumn poprzez rozdzielenie różnych lic
 					<Item id="6903" name="Okno wyszukiwania pozostaje otwarte po przywołaniu okna z wynikami wyszukiwania"/>
 					<Item id="6904" name="Potwierdź operację „Zamień we wszystkich otwartych plikach”"/>
 					<Item id="6905" name="Po wykonaniu operacji „Zamień” nie przechodź do następnego wystąpienia"/>
-					<Item id="6906" name="W oknie wyników wyszukiwania pokaż tylko jeden wpis dla znalezionej linii"/>
+					<Item id="6906" name="W oknie wyników wyszukiwania pokaż tylko jeden wpis dla znalezionej linii jeśli to możliwe"/>
 					<Item id="6907" name="Przywołując okno wyszukiwania"/>
 					<Item id="6908" name="Wprowadź zaznaczony tekst do pola wyszukiwania"/>
 					<Item id="6909" name="Jeśli nie zaznaczono tekstu to zaznacz słowo spod bieżącej pozycji kursora"/>
+					<Item id="6910" name="Minimalna liczba znaków dla auto-wybrania opcji „W zaznaczeniu”:"/>
 				</Searching>
 
 				<RecentFilesHistory title="Historia ostatnich plików">
@@ -1186,6 +1207,7 @@ Możesz zdefiniować kilka znaczników kolumn poprzez rozdzielenie różnych lic
 					<Item id="6821" name="sek."/>
 					<Item id="6822" name="Ścieżka kopii:"/>
 					<Item id="6309" name="Pamiętaj bieżącą sesję do następnego uruchomienia"/>
+					<Item id="6825" name="Zapamiętaj niedostępne pliki z poprzedniej sesji"/>
 					<Item id="6801" name="Kopia przy zapisywaniu"/>
 					<Item id="6315" name="Brak"/>
 					<Item id="6316" name="Prosta"/>
@@ -1254,12 +1276,13 @@ Możesz zdefiniować kilka znaczników kolumn poprzez rozdzielenie różnych lic
 					<Item id="7141" name="Ograniczenia dla dużych plików"/>
 					<Item id="7143" name="Włącz ograniczenia dla dużych plików (trwały brak podświetlania składni)"/>
 					<Item id="7144" name="Zdefiniuj rozmiar dużego pliku:"/>
-					<Item id="7146" name="MB   (1 - 4096)"/>
+					<Item id="7146" name="MB   (1 - 2046)"/>
 					<Item id="7147" name="Zezwól na dopasowanie nawiasów"/>
 					<Item id="7148" name="Zezwól na autouzupełnianie"/>
 					<Item id="7149" name="Zezwól na inteligentne podświetlanie"/>
 					<Item id="7150" name="Wyłącz zawijanie wierszy globalnie"/>
 					<Item id="7151" name="Zezwól na klikalne hiperłącza w treści"/>
+					<Item id="7152" name="Pomiń ostrzeżenie przy otwierania plików ≥ 2 GB"/>
 				</Performance>
 
 				<Cloud title="Chmura i hiperłącza">
@@ -1374,7 +1397,7 @@ W oknie ustawień możesz przywrócić to potwierdzenie w dowolnym momencie."/>
 				<Item id="6" name="&amp;Tak"/>
 				<Item id="7" name="&amp;Nie"/>
 				<Item id="4" name="&amp;Zawsze tak"/>
-			</DoSaveAll><!-- HowToReproduce: Check the 'Enable Save All confirm dialog' checkbox in Preference->MISC, now click 'Save all' -->
+			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click "Save all" -->
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
@@ -1393,6 +1416,7 @@ Kontynuować?"/><!-- HowToReproduce: when you openned file is modified and saved
 			<FileLockedWarning title="Nieudany zapis" message="Plik może być obecnie otwarty w innym programie."/>
 			<FileAlreadyOpenedInNpp title="" message="Plik jest już otwarty w Notepad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Nieudana zmiana nazwy" message="Podana nazwa jest już używana przez inną kartę."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
+			<RenameTabTemporaryNameIsEmpty title="Nieudana zmiana nazwy" message="Podana nazwa nie może być pusta ani nie może zawierać tylko spacji lub tabulatorów."/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="Usuwanie pliku" message="Nie udało się usunąć pliku."/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 
 			<NbFileToOpenImportantWarning title="Otwarcie wielu plików" message="Liczba plików do otwarcia wynosi $INT_REPLACE$.
@@ -1498,6 +1522,24 @@ Przetestuj te polecenia i w razie potrzeby edytuj je ponownie.
 Alternatywnie możesz powrócić do wersji Notepad++ 8.5.2 i przywrócić poprzednie dane.
 Notepad++ wykona kopię zapasową starego pliku „shortcuts.xml” i zapisze go jako „shortcuts.xml.v8.5.2.backup”.
 Po zmianie nazwy pliku z „shortcuts.xml.v8.5.2.backup” na „shortcuts.xml” twoje polecenia powinny zostać przywrócone i działać poprawnie."/><!-- HowToReproduce: Close Notepad++, remove shortcuts.xml.v8.5.2.backup & v852ShortcutsCompatibilityWarning.xml if present, relaunch Notepad++, delete or modify a shortcuts via Shortcut Mapper, close Notepad++, then the message will show up -->
+			<NotEnoughRoom4Saving title="Nieudany zapis" message="Nie udało się zapisać pliku.
+Wygląda na to, że na dysku nie ma wystarczającej ilości miejsca do zapisania pliku. Twój plik nie został zapisany."/>
+			<FileInaccessibleUserSession title="Plik niedostępny" message="Niektóre pliki z ręcznie zapisanej sesji &quot;$STR_REPLACE$&quot; są niedostępne. Można je otworzyć jako puste i tylko do odczytu dokumenty jako obiekty zastępcze.
+
+Czy chcesz utworzenia tych obiektów zastępczych?
+
+UWAGI: Jeśli zdecydujesz się nie tworzyć obiektów zastępczych lub zamkniesz je później, ręcznie zapisana sesja NIE zostanie zmodyfikowana przy wyjściu."/>
+			<FileInaccessibleDefaultSessionXml title="Plik niedostępny" message="Niektóre pliki z poprzedniej sesji są niedostępne. Można je otworzyć jako puste i tylko do odczytu dokumenty jako obiekty zastępcze.
+
+Czy chcesz utworzenia tych obiektów zastępczych?
+
+UWAGI: Jeśli zdecydujesz się nie tworzyć obiektów zastępczych lub zamkniesz je później, Twoja sesja ZOSTANIE ZMODYFIKOWANA PRZY WYJŚCIU! Sugerujemy utworzenie kopii zapasowej pliku „session.xml” w tym momencie."/>
+			<RTLvsDirectWrite title="Nie można uruchomić RTL" message="Kierunek tekstu od prawej do lewej (RTL) jest niekompatybilny z trybem DirectWrite. Proszę wyłączyć tryb DirectWrite w zakładce „Inne” w oknie ustawień i uruchomić ponownie Notepad++."/>
+			<FileMemoryAllocationFailed title="Wyjątek: alokacja pamięci pliku nie powiodła się" message="Prawdopodobnie nie ma wystarczającej ilości ciągłej wolnej pamięci dla pliku ładowanego przez Notepad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<FindRegexBackwardDisabled title="Wsteczne wyszukiwanie wyrażeń regularnych wyłączone" message="Domyślnie wsteczne wyszukiwanie wyrażeń regularnych jest wyłączone z powodu potencjalnie nieoczekiwanych wyników. Aby przeprowadzić wyszukiwanie wstecz, otwórz okno „Szukaj” i zamiast trybu szukania poprzez wyrażenia regularne wybierz tryb normalny lub rozszerzony.
+Naciśnij przycisk OK, aby otworzyć okno „Szukaj” lub ustawić na nim fokus.
+
+Jeśli potrzebujesz funkcji wstecznego wyszukiwania wyrażeń regularnych to zapoznaj się z instrukcją obsługi, gdzie znajduje się opis jej włączenia."/>
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="Historia schowka"/>
@@ -1621,7 +1663,6 @@ Po zmianie nazwy pliku z „shortcuts.xml.v8.5.2.backup” na „shortcuts.xml�
 			<default-open-save-select-folder value="Wybierz folder, który Notepad++ ma wykorzystywać jako domyślny"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Shift+Enter pozwala wyszukiwać w drugą stronę."/>
 			<two-find-buttons-tip value="Tryb dwóch przycisków szukania"/>
-			<file-rename-title value="Zmiana nazwy"/>
 			<find-in-files-filter-tip value="Szukaj wśród plików cpp, cxx, h, hxx i hpp:
 *.cpp *.cxx *.h *.hxx *.hpp
 
@@ -1657,6 +1698,7 @@ Szukaj wśród wszystkich plików z wyjątkiem wszystkich zagnieżdżonych folde
 			<find-status-replace-not-found value="Zamienianie: Nie znaleziono wystąpień do zamiany."/>
 			<find-status-replace-readonly value="Zamienianie: Nie można zamienić. Plik jest dostępny tylko do odczytu."/>
 			<find-status-cannot-find value="Szukanie: Nie udało się znaleźć „$STR_REPLACE$”."/>
+			<find-status-cannot-find-pebkac-maybe value="Nie można znaleźć podanego wystąpienia. Być może zapomniano sprawdzić opcję „Wracaj na początek pliku” (włączona), „Uwzględnij wielkość liter” (wyłączona) lub „Znajdź tylko całe wyrazy” (wyłączona)."/>
 			<find-status-scope-selection value="w zaznaczonym tekście"/>
 			<find-status-scope-all value="w całym pliku"/>
 			<find-status-scope-backward value="od początku pliku do aktualnego położenia kursora"/>
@@ -1666,9 +1708,7 @@ Szukaj wśród wszystkich plików z wyjątkiem wszystkich zagnieżdżonych folde
 			<finder-collapse-all value="Zwiń wszystko"/>
 			<finder-uncollapse-all value="Rozwiń wszystko"/>
 			<finder-copy value="Kopiuj zaznaczone linie"/>
-			<finder-copy-verbatim value="Kopiuj"/>
 			<finder-copy-paths value="Kopiuj ścieżki"/>
-			<finder-select-all value="Zaznacz wszystko"/>
 			<finder-clear-all value="Wyczyść wszystko"/>
 			<finder-open-all value="Otwórz wszystko"/>
 			<finder-purge-for-every-search value="Opróżnij przed każdym wyszukiwaniem"/>
@@ -1695,7 +1735,6 @@ Szukaj wśród wszystkich plików z wyjątkiem wszystkich zagnieżdżonych folde
 			<summary-nbsel2 value=" bajtów) w "/>
 			<summary-nbrange value=" zakresach"/>
 			<progress-hits-title value="Trafień:"/>
-			<progress-cancel-button value="Anuluj"/>
 			<progress-cancel-info value="Trwa anulowanie operacji, proszę czekać..."/>
 			<find-in-files-progress-title value="Szukanie w plikach w toku..."/>
 			<replace-in-files-confirm-title value="Na pewno chcesz kontynuować?"/>
@@ -1710,6 +1749,11 @@ Szukaj wśród wszystkich plików z wyjątkiem wszystkich zagnieżdżonych folde
 			<find-result-title value="Wyszukanie"/><!-- Must not begin with space or tab character -->
 			<find-result-title-info value="($INT_REPLACE1$ trafień w $INT_REPLACE2$ plikach z $INT_REPLACE3$ przeszukiwanych)"/>
 			<find-result-title-info-selections value="($INT_REPLACE1$ trafień w $INT_REPLACE2$ zaznaczeniu z $INT_REPLACE3$ przeszukiwanych)"/>
+			<find-result-title-info-options-searchmode-normal value="Normalny"/>
+			<find-result-title-info-options-searchmode-extended value="Rozszerzony"/>
+			<find-result-title-info-options-searchmode-regexp value="Wyrażenie regularne"/>
+			<find-result-title-info-options-case value="Uwzględnij wielkość liter"/>
+			<find-result-title-info-options-word value="Tylko całe wyrazy"/>
 			<find-result-title-info-extra value=" - Tryb filtrowania linii: wyświetla tylko przefiltrowane wyniki"/>
 			<find-result-hits value="($INT_REPLACE$ trafień)"/>
 			<find-result-line-prefix value="Linia"/><!-- Must not begin with space or tab character -->
@@ -1758,6 +1802,8 @@ Kliknij na przycisk „?” po prawej aby otworzyć stronę z dokumentacją."/>
 			<!-- Don't translate "(&quot;Non-printing characters custom color&quot;)" -->
 			<npcCustomColor-tip value="Przejdź do okna Konfiguratora stylów, by zmienić domyślny własny kolor dla wybranych białych i niedrukowanych znaków (styl: „Non-printing characters custom color”)."/>
 			<npcIncludeCcUniEol-tip value="Zastosuj ustawienia wyglądu znaków niedrukowalnych do znaków kontrolnych C0 i C1 oraz znaków EOL (następna linia, separator linii i separator akapitu) z Unicode."/>
+			<searchingInSelThresh-tip value="Liczba wybranych znaków w obszasze edycji, przy których w aktywnym oknie „Szukaj” następuje automatyczne zaznaczenie opcji „W zaznaczeniu”. Maksymalna wartość to 1024. Ustaw wartość na 0, aby wyłączyć automatyczne zaznaczenie tej opcji."/>
+			<verticalEdge-tip value="Dodaj znacznik kolumny, wskazując jej pozycję liczbą dziesiętną. Można zdefiniować kilka znaczników kolumn rozdzielając różne liczby znakami spacji."/>
 		</MiscStrings>
 	</Native-Langue>
 </NotepadPlus>

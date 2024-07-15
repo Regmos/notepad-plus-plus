@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-	- last change:  Notepad++ 8.6  30/Nov/2023  by Ondřej Müller (mullero@email.cz)
+	- last change:  Notepad++ 8.6.9  24/Jun/2024  by Ondřej Müller (mullero@email.cz)
 	- N++ Community QA:  https://notepad-plus-plus.org/community/topic/87/czech-translations
 	- contributors:  Ondřej Müller (mullero@email.cz), Tomáš Hrouda (gobbet@centrum.cz), Martin Darebný (darBis)
 	- the most recent version of this file can be downloaded from the project master-branch here: https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/installer/nativeLang/czech.xml
 -->
 <NotepadPlus>
-	<Native-Langue name="Čeština" filename="czech.xml" version="8.6">
+	<Native-Langue name="Čeština" filename="czech.xml" version="8.6.9">
 		<Menu>
 			<Main>
 				<!-- Main Menu Entries -->
@@ -332,6 +332,8 @@
 					<Item id="44113" name="Označit barvou 3"/>
 					<Item id="44114" name="Označit barvou 4"/>
 					<Item id="44115" name="Označit barvou 5"/>
+					<Item id="44116" name="První karta"/>
+					<Item id="44117" name="Poslední karta"/>
 					<Item id="44130" name="Zobrazit netisknutelné znaky"/>
 					<Item id="44131" name="Zobrazit řídící znaky a &amp;&amp; Unicode EOLy"/>
 					<Item id="45001" name="Konvertovat do formátu Windows"/>
@@ -357,6 +359,8 @@
 					<Item id="10002" name="Vytvořit kopii v druhém náhledu"/>
 					<Item id="10003" name="Přesunout do nové instance"/>
 					<Item id="10004" name="Otevřít v nové instanci"/>
+					<Item id="10005" name="Přesunout na začátek"/>
+					<Item id="10006" name="Přesunout na konec"/>
 					<Item id="46001" name="Upravit styl..."/>
 					<Item id="46015" name="MS-DOS styl"/>
 					<Item id="46016" name="Normální text"/>
@@ -450,6 +454,8 @@
 				<Item CMDID="10002" name="Vytvořit kopii v druhém náhledu"/>
 				<Item CMDID="10003" name="Přesunout do nové instance"/>
 				<Item CMDID="10004" name="Otevřít v nové instanci"/>
+				<Item CMDID="10005" name="Přesunout na začátek"/>
+				<Item CMDID="10006" name="Přesunout na konec"/>
 				<Item CMDID="4" name="Označit kartu barvou"/>
 				<Item CMDID="44111" name="Označit barvou 1"/>
 				<Item CMDID="44112" name="Označit barvou 2"/>
@@ -520,9 +526,9 @@
 			</Find>
 
 			<IncrementalFind title="">
-				<Item id="1681" name="Najít"/>
-				<Item id="1685" name="Rozlišovat velká a malá p."/>
-				<Item id="1690" name="Zvýraznit všechny"/>
+				<Item id="1681" name="Najít:"/>
+				<Item id="1685" name="&amp;Rozlišovat velikost písmen"/>
+				<Item id="1690" name="&amp;Zvýraznit všechny"/>
 			</IncrementalFind>
 
 			<FindCharsInRange title="Najít znaky z rozsahu...">
@@ -1004,7 +1010,8 @@
 					<Item id="6133" name="Stavový řádek"/>
 					<Item id="6134" name="Skrýt"/>
 				</Global>
-				<Scintillas title="Editace">
+				<Scintillas title="Editace 1">
+					<Item id="6214" name="Povolit Kopírování/Vyjmutí celého řádku bez výběru"/>
 					<Item id="6215" name="Povolit vyhlazování fontu"/>
 					<Item id="6216" name="Nastavení kurzoru"/>
 					<Item id="6217" name="Šířka:"/>
@@ -1025,7 +1032,9 @@
 					<Item id="6653" name="Zvýrazněné pozadí"/>
 					<Item id="6654" name="Orámování"/>
 					<Item id="6655" name="tloušťka:"/>
-					<Item id="6247" name="Konce řádků (CRLF)"/><!-- Don't translate "(CRLF)" -->
+				</Scintillas>
+				<Scintillas2 title="Editace 2">
+					<Item id="6247" name="EOL - konce řádků (CRLF)"/><!-- Don't translate "(CRLF)" -->
 					<Item id="6248" name="Implicitní"/>
 					<Item id="6249" name="Barva prostého textu"/>
 					<Item id="6250" name="Vlastní barva"/>
@@ -1033,8 +1042,13 @@
 					<Item id="6254" name="Zkratka"/>
 					<Item id="6255" name="Kód Unicode"/>
 					<Item id="6256" name="Vlastní barva"/>
-					<Item id="6258" name="Aplikovat na C0, C1 a &amp;&amp; Unicode EOLy"/>
-				</Scintillas>
+					<Item id="6258" name="Aplikovat nastavení vzhledu na C0, C1 a &amp;&amp; Unicode EOLy"/>
+					<Item id="6259" name="Zabránit vkládání řídících znaků (kódy C0) do dokumentu"/>
+					<Item id="6260" name="Vzhled"/>
+					<Item id="6521" name="Vícenásobná editace"/>
+					<Item id="6522" name="Povolit vícenásobnou editaci (Ctrl+Myš kliknutí/výběr)"/>
+					<Item id="6523" name="Povolit výběr sloupců pro vícenásobnou editaci"/>
+				</Scintillas2>
 				<DarkMode title="Tmavý režim">
 					<Item id="7102" name="Černý"/>
 					<Item id="7103" name="Červený"/>
@@ -1076,15 +1090,15 @@
 					<Item id="6211" name="Nastavení svislé vodící čáry"/>
 					<Item id="6212" name="Nerušivý mód"/>
 					<Item id="6213" name="Režim s pozadím"/>
-					<Item id="6223" name="Zobrazit historii změn"/>
+					<Item id="6223" name="Zobrazit na okraji"/>
 					<Item id="6226" name="Žádný"/>
 					<Item id="6231" name="Šířka okraje"/>
 					<Item id="6235" name="Bez okraje"/>
-					<Item id="6237" name="Přidejte Vaši sloupcovou značku poukázáním na její pozici (decimální číslo).
-Můžete definovat více značek sloupců použitím více čísel oddělených prázdnými znaky."/>
 					<Item id="6291" name="Číslo řádku"/>
 					<Item id="6292" name="Dynamická šířka"/>
 					<Item id="6293" name="Konstantní šířka"/>
+					<Item id="6295" name="Historie změn"/>
+					<Item id="6296" name="Zobrazit v textu"/>
 				</MarginsBorderEdge>
 				<NewDoc title="Nový dokument">
 					<Item id="6401" name="Formát"/>
@@ -1119,10 +1133,13 @@ Můžete definovat více značek sloupců použitím více čísel oddělených 
 					<Item id="6506" name="Nepoužívané syntaxe"/>
 					<Item id="6507" name="Použít kompaktní menu pro syntaxe"/>
 					<Item id="6508" name="Nabídka syntaxí"/>
-					<Item id="6301" name="Nastavení tabulátoru"/>
-					<Item id="6302" name="Zaměnit za mezery"/>
-					<Item id="6303" name="Velikost tabulátoru:"/>
+					<Item id="6301" name="Nastavení odsazení"/>
+					<Item id="6302" name="Mezerami"/>
+					<Item id="6303" name="Velikost odsazení:"/>
+					<Item id="6310" name="Odsazovat:"/>
+					<Item id="6311" name="Tabulátorem"/>
 					<Item id="6510" name="Použít implicitní"/>
+					<Item id="6512" name="Klávesou Backspace zmenšovat odsazení místo odstranění pouhé jedné mezery"/>
 					<Item id="6335" name="Zpětné lomítko je escape znak pro SQL"/>
 				</Language>
 				<Highlighting title="Zvýrazňování">
@@ -1184,7 +1201,7 @@ Můžete definovat více značek sloupců použitím více čísel oddělených 
 					<Item id="6903" name="Dialog Najít zůstane otevřen po vyhledávání s výstupem do okna s výsledky"/>
 					<Item id="6904" name="Potvrzovat příkaz Zaměnit vše ve všech otevřených dokumentech"/>
 					<Item id="6905" name="Nahradit: Nepřesunovat se při nahrazení výrazu k následujícímu výskytu"/>
-					<Item id="6906" name="Okno s výsledky vyhledávání: zobrazovat pouze jeden záznam s nálezy na řádku"/>
+					<Item id="6906" name="Okno s výsledky vyhledávání: zobrazovat pouze jeden záznam s nálezy na řádku, pokud je to možné"/>
 					<Item id="6907" name="Při vyvolání dialogového okna &quot;Najít&quot;"/>
 					<Item id="6908" name="Předvyplnit vyhledávací pole označeným textem"/>
 					<Item id="6909" name="Když není nic označeno, předvyplnit slovem na pozici kurzoru"/>
@@ -1239,7 +1256,7 @@ Můžete definovat více značek sloupců použitím více čísel oddělených 
 					<Item id="6817" name="Body obnovení a periodické zálohování"/>
 					<Item id="6818" name="Aktivovat ukládání bodů pro obnovení relace a periodické zálohování"/>
 					<Item id="6819" name="Zálohovat každých"/>
-					<Item id="6821" name="sekund"/>
+					<Item id="6821" name="sekund (při modif.)"/>
 					<Item id="6822" name="Cesta k zálohám:"/>
 					<Item id="6825" name="Pamatovat si nedostupné soubory z poslední relace (zástupné dokumenty/karty)"/>
 				</Backup>
@@ -1301,7 +1318,7 @@ Můžete definovat více značek sloupců použitím více čísel oddělených 
 					<Item id="7141" name="Omezení funkcí pro velké soubory"/>
 					<Item id="7143" name="Povolit vypnutí zvýrazňování syntaxe pro velké soubory"/>
 					<Item id="7144" name="Velký soubor je >= "/>
-					<Item id="7146" name="MB   (1 - 4096)"/>
+					<Item id="7146" name="MB   (1 - 2046)"/>
 					<Item id="7147" name="Povolit párování závorek"/>
 					<Item id="7148" name="Povolit automatické dokončování"/>
 					<Item id="7149" name="Povolit inteligentní zvýrazňování"/>
@@ -1508,8 +1525,12 @@ Přejete si použít takovéto zástupné dokumenty/karty?
 
 POZNÁMKA: Jestliže se rozhodnete neotevírat zástupné dokumenty/karty anebo je poté sami zavřete, Vaše relace BUDE PŘI UKONČENÍ Notepadu++ automaticky MODIFIKOVÁNA!
 Doporučujeme Vám, abyste si nyní zazálohovali Váš soubor &quot;session.xml&quot;."/>
-			<RTLvsDirectWrite title="Nelze použít směr textu RTL" message="RTL není v současnosti kompatibilní se zvoleným DirectWrite režimem. Prosím vypněte nejprve DirectWrite v sekci &quot;Různé&quot; v &quot;Nastavení&quot;, poté restartujte Notepad++ a použijte znovu tento příkaz."/>
+			<RTLvsDirectWrite title="Nelze použít směr textu RTL" message="RTL není v současnosti kompatibilní se zvoleným DirectWrite režimem. Prosím vypněte nejprve DirectWrite v sekci &quot;Různé&quot; v &quot;Nastavení&quot; a restartujte Notepad++."/>
 			<FileMemoryAllocationFailed title="Problém s alokací paměti pro soubor" message="Pravděpodobně není dostatek souvislé volné paměti pro soubor, který Notepad++ právě načítá."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<FindRegexBackwardDisabled title="Vypnuté zpětné vyhledávání při užívání regulárních výrazů" message="Ve výchozím nastavení je zpětné vyhledávání při užití regulárních výrazů zakázáno kvůli potenciálně neočekávaným výsledkům. Chcete-li provést zpětné vyhledávání, otevřete dialogové okno Najít a místo regulárních výrazů vyberte režim normálního nebo rozšířeného vyhledávání.
+Stisknutím tlačítka OK otevřete dialogové okno Najít nebo ho přepnete do popředí.
+			
+Pokud opravdu potřebujete funkci zpětného vyhledávání při regulárních výrazech, pokyny pro její zapnutí najdete v uživatelské příručce."/>
 		</MessageBox>
 		
 		<ClipboardHistory>
@@ -1640,7 +1661,6 @@ Doporučujeme Vám, abyste si nyní zazálohovali Váš soubor &quot;session.xml
 			<default-open-save-select-folder value="Vyberte výchozí složku"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Pro změnu směru vyhledávání použijte Shift + Enter."/>
 			<two-find-buttons-tip value="Mód se dvěma vyhledávacími tlačítky"/>
-			<file-rename-title value="Přejmenovat"/>
 			<find-in-files-filter-tip value="Hledat v cpp, cxx, h, hxx &amp;&amp; hpp souborech:
 *.cpp *.cxx *.h *.hxx *.hpp
 
@@ -1686,9 +1706,7 @@ Hledat ve všech souborech, ale rekurzivně vynechat všechny složky log nebo l
 			<finder-collapse-all value="Sbalit vše"/>
 			<finder-uncollapse-all value="Rozbalit vše"/>
 			<finder-copy value="Kopírovat vybrané řádky"/>
-			<finder-copy-verbatim value="Kopírovat"/>
 			<finder-copy-paths value="Kopírovat souborovou cestu(y)"/>
-			<finder-select-all value="Vybrat vše"/>
 			<finder-clear-all value="Smazat vše"/>
 			<finder-open-all value="Otevřít vše"/>
 			<finder-purge-for-every-search value="Vymazat před každým vyhledáváním"/>
@@ -1715,7 +1733,6 @@ Hledat ve všech souborech, ale rekurzivně vynechat všechny složky log nebo l
 			<summary-nbsel2 value=" bytů) v "/>
 			<summary-nbrange value=" oblastech"/>
 			<progress-hits-title value="Výskytů:"/>
-			<progress-cancel-button value="Storno"/>
 			<progress-cancel-info value="Ruším operaci, počkejte prosím ..."/>
 			<find-in-files-progress-title value="Průběh hledání v souborech ..."/>
 			<replace-in-files-confirm-title value="Jste si jistí?"/>
@@ -1730,6 +1747,11 @@ Hledat ve všech souborech, ale rekurzivně vynechat všechny složky log nebo l
 			<find-result-title value="Vyhledávání"/><!-- Must not begin with space or tab character -->
 			<find-result-title-info value="($INT_REPLACE1$ výskytů v $INT_REPLACE2$ souborech z $INT_REPLACE3$ prohledaných)"/>
 			<find-result-title-info-selections value="($INT_REPLACE1$ výskytů v $INT_REPLACE2$ výběrech z $INT_REPLACE3$ prohledávaných)"/>
+			<find-result-title-info-options-searchmode-normal value="Normální"/>
+			<find-result-title-info-options-searchmode-extended value="Rozšířený"/>
+			<find-result-title-info-options-searchmode-regexp value="Reg. výraz"/>
+			<find-result-title-info-options-case value="VELKÁ/malá"/>
+			<find-result-title-info-options-word value="Celá slova"/>
 			<find-result-title-info-extra value=" - Režim řádkového filtru: zobrazení pouze filtrovaných výsledků"/>
 			<find-result-hits value="(výskytů: $INT_REPLACE$)"/>
 			<find-result-line-prefix value="Řádek"/><!-- Must not begin with space or tab character -->
@@ -1781,6 +1803,7 @@ Kliknutím na &quot;?&quot; tlačítko vpravo otevřete webovou stránku s Uživ
 			<npcCustomColor-tip value="Přejděte do Úpravy stylu a změňte výchozí vlastní barvu pro vybrané prázdné a netisknutelné znaky. (&quot;Non-printing characters custom color&quot;)."/>
 			<npcIncludeCcUniEol-tip value="Použije nastavení vzhledu netisknutelných znaků pro řídící znaky C0, C1 (reprezentují další informace o textu jako jsou další řádek, oddělovač řádků, oddělovač odstavců) a pro Unicode EOL znaky." />
 			<searchingInSelThresh-tip value="Minimální počet vybraných znaků editační zóny, aby došlo k automatickému zaškrtnutí políčka &quot;Ve vybraném&quot; při aktivaci dialogu &quot;Najít&quot;. Nejvyšší možná hodnota je 1024. Pokud chcete toto automatické zaškrtávání zcela vypnout, nastavte hodnotu na 0."/>
+			<verticalEdge-tip value="Přidejte Vaši sloupcovou značku poukázáním na její pozici (decimální číslo). Můžete definovat více značek sloupců použitím více čísel oddělených prázdnými znaky."/>
 		</MiscStrings>
 
 	</Native-Langue>

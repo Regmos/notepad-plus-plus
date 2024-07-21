@@ -5,7 +5,7 @@ Translation note:
 2. All the comments are for explanation, they are not for translation.
 -->
 <NotepadPlus>
-	<Native-Langue name="Dansk" filename="danish.xml" version="8.6.8">
+	<Native-Langue name="Dansk" filename="danish.xml" version="8.6.9">
 		<Menu>
 			<Main>
 				<!-- Main Menu Entries -->
@@ -1396,6 +1396,11 @@ Du kan altid fortryde i &quot;Indstillinger => Diverse&quot;."/>
 				<Item id="7" name="&amp;Nej"/>
 				<Item id="4" name="Altid"/>
 			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click 'Save all' -->
+
+			<DebugInfo title="Fejlinformation">
+				<Item id="1752" name="Kopiér"/>
+				<Item id="1" name="OK"/>
+			</DebugInfo>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ is a place holder, don't translate it -->
@@ -1538,6 +1543,7 @@ BEMÆRK: Hvis du ikke opretter pladsholderne, eller lukker dem senere, ÆNDRES S
 Klik OK for at åbne eller fokusere søgedialogen.
 			
 Se brugermanualen hvis du vil aktivere baglæns Regulære udtryk."/>
+			<PrintError title="0" message="Kan ikke starte udskrivning."/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="Kopieringshistorik"/>
@@ -1810,4 +1816,3 @@ Vælger du avanceret, uden at redigere filer med førnævnte sprog, forbliver in
 		</MiscStrings>
 	</Native-Langue>
 </NotepadPlus>
-

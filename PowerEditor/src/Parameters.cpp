@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <time.h>
-#include <shlwapi.h>
+
 #include <shlobj.h>
 #include "Parameters.h"
 #include "ScintillaEditView.h"
@@ -431,14 +431,14 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_F5,      IDM_EXECUTE,                                  false, false, false, nullptr },
 
 	{ VK_NULL,    IDM_WINDOW_WINDOWS,                           false, false, false, nullptr },
-	{ VK_NULL,    IDM_WINDOW_SORT_FN_ASC,                       false, false, false, L"Sort By Name A to Z" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FN_DSC,                       false, false, false, L"Sort By Name Z to A" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FP_ASC,                       false, false, false, L"Sort By Path A to Z" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FP_DSC,                       false, false, false, L"Sort By Path Z to A" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FT_ASC,                       false, false, false, L"Sort By Type A to Z" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FT_DSC,                       false, false, false, L"Sort By Type Z to A" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FS_ASC,                       false, false, false, L"Sort By Size Smaller to Larger" },
-	{ VK_NULL,    IDM_WINDOW_SORT_FS_DSC,                       false, false, false, L"Sort By Size Larger to Smaller" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FN_ASC,                       false, false, false, L"Sort by Name A to Z" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FN_DSC,                       false, false, false, L"Sort by Name Z to A" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FP_ASC,                       false, false, false, L"Sort by Path A to Z" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FP_DSC,                       false, false, false, L"Sort by Path Z to A" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FT_ASC,                       false, false, false, L"Sort by Type A to Z" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FT_DSC,                       false, false, false, L"Sort by Type Z to A" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FS_ASC,                       false, false, false, L"Sort by Content Length Ascending" },
+	{ VK_NULL,    IDM_WINDOW_SORT_FS_DSC,                       false, false, false, L"Sort by Content Length Descending" },
 
 	{ VK_NULL,    IDM_CMDLINEARGUMENTS,                         false, false, false, nullptr },
 	{ VK_NULL,    IDM_HOMESWEETHOME,                            false, false, false, nullptr },
@@ -629,6 +629,14 @@ int getKwClassFromName(const wchar_t *str)
 	if (!lstrcmp(L"type5", str)) return LANG_INDEX_TYPE5;
 	if (!lstrcmp(L"type6", str)) return LANG_INDEX_TYPE6;
 	if (!lstrcmp(L"type7", str)) return LANG_INDEX_TYPE7;
+	if (!lstrcmp(L"substyle1", str)) return LANG_INDEX_SUBSTYLE1;
+	if (!lstrcmp(L"substyle2", str)) return LANG_INDEX_SUBSTYLE2;
+	if (!lstrcmp(L"substyle3", str)) return LANG_INDEX_SUBSTYLE3;
+	if (!lstrcmp(L"substyle4", str)) return LANG_INDEX_SUBSTYLE4;
+	if (!lstrcmp(L"substyle5", str)) return LANG_INDEX_SUBSTYLE5;
+	if (!lstrcmp(L"substyle6", str)) return LANG_INDEX_SUBSTYLE6;
+	if (!lstrcmp(L"substyle7", str)) return LANG_INDEX_SUBSTYLE7;
+	if (!lstrcmp(L"substyle8", str)) return LANG_INDEX_SUBSTYLE8;
 
 	if ((str[1] == '\0') && (str[0] >= '0') && (str[0] <= '8')) // up to KEYWORDSET_MAX
 		return str[0] - '0';
@@ -1236,7 +1244,7 @@ bool NppParameters::load()
 	//
 	if (!_cmdSettingsDir.empty())
 	{
-		if (!::PathIsDirectory(_cmdSettingsDir.c_str()))
+		if (!doesDirectoryExist(_cmdSettingsDir.c_str()))
 		{
 			// The following text is not translatable.
 			// _pNativeLangSpeaker is initialized AFTER _userPath being dterminated because nativeLang.xml is from from _userPath.
@@ -2195,8 +2203,6 @@ int NppParameters::getPluginCmdIdFromMenuEntryItemName(HMENU pluginsMenu, const 
 
 bool NppParameters::getContextMenuFromXmlTree(HMENU mainMenuHadle, HMENU pluginsMenu, bool isEditCM)
 {
-	std::vector<MenuItemUnit>& contextMenuItems = isEditCM ? _contextMenuItems : _tabContextMenuItems;
-
 	TiXmlDocumentA* pXmlContextMenuDocA = isEditCM ? _pXmlContextMenuDocA : _pXmlTabContextMenuDocA;
 	std::string cmName = isEditCM ? "ScintillaContextMenu" : "TabContextMenu";
 
@@ -2212,6 +2218,8 @@ bool NppParameters::getContextMenuFromXmlTree(HMENU mainMenuHadle, HMENU plugins
 	TiXmlNodeA *contextMenuRoot = root->FirstChildElement(cmName.c_str());
 	if (contextMenuRoot)
 	{
+		std::vector<MenuItemUnit>& contextMenuItems = isEditCM ? _contextMenuItems : _tabContextMenuItems;
+
 		for (TiXmlNodeA *childNode = contextMenuRoot->FirstChildElement("Item");
 			childNode ;
 			childNode = childNode->NextSibling("Item") )
@@ -2288,7 +2296,7 @@ void NppParameters::setWorkingDir(const wchar_t * newPath)
 		if (doesDirectoryExist(_nppGUI._defaultDirExp))
 			_currentDirectory = _nppGUI._defaultDirExp;
 		else
-			_currentDirectory = _nppPath.c_str();
+			_currentDirectory = _nppPath;
 	}
 }
 
@@ -5006,7 +5014,12 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 				const wchar_t* val = n->Value();
 				if (val)
 				{
-					_nppGUI._isMinimizedToTray = (lstrcmp(val, L"yes") == 0);
+					if (lstrcmp(val, L"no") == 0 || lstrcmp(val, L"0") == 0)
+						_nppGUI._isMinimizedToTray = sta_none;
+					else if (lstrcmp(val, L"yes") == 0|| lstrcmp(val, L"1") == 0)
+						_nppGUI._isMinimizedToTray = sta_minimize;
+					else if (lstrcmp(val, L"2") == 0)
+						_nppGUI._isMinimizedToTray = sta_close;
 				}
 			}
 		}
@@ -6192,10 +6205,10 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 		}
 		else if (!lstrcmp(nm, L"commandLineInterpreter"))
 		{
-			TiXmlNode *node = childNode->FirstChild();
-			if (node)
+			TiXmlNode *cmdLineInterpreterNode = childNode->FirstChild();
+			if (cmdLineInterpreterNode)
 			{
-				const wchar_t *cli = node->Value();
+				const wchar_t *cli = cmdLineInterpreterNode->Value();
 				if (cli && cli[0])
 					_nppGUI._commandLineInterpreter.assign(cli);
 			}
@@ -7369,9 +7382,13 @@ void NppParameters::createXmlTreeFromGUIParams()
 		insertGUIConfigBoolNode(newGUIRoot, L"CheckHistoryFiles", _nppGUI._checkHistoryFiles);
 	}
 
-	// <GUIConfig name="TrayIcon">no</GUIConfig>
+	// <GUIConfig name="TrayIcon">0</GUIConfig>
 	{
-		insertGUIConfigBoolNode(newGUIRoot, L"TrayIcon", _nppGUI._isMinimizedToTray);
+		wchar_t szStr[12] { '\0' };
+		_itow(_nppGUI._isMinimizedToTray, szStr, 10);
+		TiXmlElement* GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(L"GUIConfig")))->ToElement();
+		GUIConfigElement->SetAttribute(L"name", L"TrayIcon");
+		GUIConfigElement->InsertEndChild(TiXmlText(szStr));
 	}
 
 	// <GUIConfig name="MaintainIndent">yes</GUIConfig>
@@ -8258,6 +8275,9 @@ int NppParameters::langTypeToCommandID(LangType lt) const
 			
 		case L_RAKU:
 			id = IDM_LANG_RAKU; break;
+
+		case L_TOML:
+			id = IDM_LANG_TOML; break;
 			
 		case L_SEARCHRESULT :
 			id = -1;	break;
@@ -8482,15 +8502,13 @@ void NppParameters::writeStyle2Element(const Style & style2Write, Style & style2
 	}
 
 
-	if (!style2Write._keywords.empty())
-	{
-		TiXmlNode *teteDeNoeud = element->LastChild();
+	TiXmlNode *teteDeNoeud = element->LastChild();
 
-		if (teteDeNoeud)
-			teteDeNoeud->SetValue(style2Write._keywords.c_str());
-		else
-			element->InsertEndChild(TiXmlText(style2Write._keywords.c_str()));
-	}
+	if (teteDeNoeud)
+		teteDeNoeud->SetValue(style2Write._keywords.c_str());
+	else
+		element->InsertEndChild(TiXmlText(style2Write._keywords.c_str()));
+
 }
 
 void NppParameters::insertUserLang2Tree(TiXmlNode *node, UserLangContainer *userLang)
@@ -8644,6 +8662,7 @@ void NppParameters::addScintillaModifiedIndex(int index)
 	}
 }
 
+#ifndef	_WIN64
 void NppParameters::safeWow64EnableWow64FsRedirection(BOOL Wow64FsEnableRedirection)
 {
 	HMODULE kernel = GetModuleHandle(L"kernel32");
@@ -8669,6 +8688,7 @@ void NppParameters::safeWow64EnableWow64FsRedirection(BOOL Wow64FsEnableRedirect
 		}
 	}
 }
+#endif
 
 void NppParameters::setUdlXmlDirtyFromIndex(size_t i)
 {
@@ -8818,4 +8838,152 @@ EolType convertIntToFormatType(int value, EolType defvalue)
 		default:
 			return defvalue;
 	}
+}
+
+void NppParameters::initTabCustomColors()
+{
+	StyleArray& stylers = getMiscStylerArray();
+
+	const Style* pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_1);
+	if (pStyle)
+	{
+		individualTabHues[0].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_2);
+	if (pStyle)
+	{
+		individualTabHues[1].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_3);
+	if (pStyle)
+	{
+		individualTabHues[2].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_4);
+	if (pStyle)
+	{
+		individualTabHues[3].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_5);
+	if (pStyle)
+	{
+		individualTabHues[4].loadFromRGB(pStyle->_bgColor);
+	}
+
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_DM_1);
+	if (pStyle)
+	{
+		individualTabHuesFor_Dark[0].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_DM_2);
+	if (pStyle)
+	{
+		individualTabHuesFor_Dark[1].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_DM_3);
+	if (pStyle)
+	{
+		individualTabHuesFor_Dark[2].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_DM_4);
+	if (pStyle)
+	{
+		individualTabHuesFor_Dark[3].loadFromRGB(pStyle->_bgColor);
+	}
+
+	pStyle = stylers.findByName(TABBAR_INDIVIDUALCOLOR_DM_5);
+	if (pStyle)
+	{
+		individualTabHuesFor_Dark[4].loadFromRGB(pStyle->_bgColor);
+	}
+}
+
+
+void NppParameters::setIndividualTabColor(COLORREF colour2Set, int colourIndex, bool isDarkMode)
+{
+	if (colourIndex < 0 || colourIndex > 4) return;
+
+	if (isDarkMode)
+		individualTabHuesFor_Dark[colourIndex].loadFromRGB(colour2Set);
+	else
+		individualTabHues[colourIndex].loadFromRGB(colour2Set);
+
+	return;
+}
+
+COLORREF NppParameters::getIndividualTabColor(int colourIndex, bool isDarkMode, bool saturated)
+{
+	if (colourIndex < 0 || colourIndex > 4) return {};
+
+	HLSColour result;
+	if (isDarkMode)
+	{
+		result = individualTabHuesFor_Dark[colourIndex];
+
+		if (saturated)
+		{
+			result._lightness = 146U;
+			result._saturation = std::min<WORD>(240U, result._saturation + 100U);
+		}
+	}
+	else
+	{
+		result = individualTabHues[colourIndex];
+
+		if (saturated)
+		{
+			result._lightness = 140U;
+			result._saturation = std::min<WORD>(240U, result._saturation + 30U);
+		}
+	}
+
+	return result.toRGB();
+}
+
+void NppParameters::initFindDlgStatusMsgCustomColors()
+{
+	StyleArray& stylers = getMiscStylerArray();
+
+	const Style* pStyle = stylers.findByName(FINDDLG_STAUSNOTFOUND_COLOR);
+	if (pStyle)
+	{
+		findDlgStatusMessageColor[0] = pStyle->_fgColor;
+	}
+
+	pStyle = stylers.findByName(FINDDLG_STAUSMESSAGE_COLOR);
+	if (pStyle)
+	{
+		findDlgStatusMessageColor[1] = pStyle->_fgColor;
+	}
+
+	pStyle = stylers.findByName(FINDDLG_STAUSREACHED_COLOR);
+	if (pStyle)
+	{
+		findDlgStatusMessageColor[2] = pStyle->_fgColor;
+	}
+
+}
+
+void NppParameters::setFindDlgStatusMsgIndexColor(COLORREF colour2Set, int colourIndex)
+{
+	if (colourIndex < 0 || colourIndex > 2) return;
+
+	findDlgStatusMessageColor[colourIndex] = colour2Set;
+
+	return;
+}
+
+COLORREF NppParameters::getFindDlgStatusMsgColor(int colourIndex)
+{
+	if (colourIndex < 0 || colourIndex > 2) return black;
+
+	return findDlgStatusMessageColor[colourIndex];
 }

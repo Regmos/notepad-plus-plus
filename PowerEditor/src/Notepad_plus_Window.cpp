@@ -228,7 +228,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 
 	fileNames.clear();
 
-	wstring nppThemeDir = nppDir.c_str(); // <- should use the pointer to avoid the constructor of copy
+	wstring nppThemeDir = nppDir; // <- should use the pointer to avoid the constructor of copy
 	pathAppend(nppThemeDir, L"themes\\");
 
 	// Set theme directory to their installation directory
@@ -287,7 +287,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		{
 			nppGUI._themeName.assign(themePath);
 			nppParams.reloadStylers(themePath.c_str());
-			::SendMessage(_hSelf, WM_UPDATESCINTILLAS, 0, 0);
+			::SendMessage(_hSelf, WM_UPDATESCINTILLAS, TRUE, 0);
 		}
 	}
 

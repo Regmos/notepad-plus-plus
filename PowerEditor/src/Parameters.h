@@ -30,6 +30,8 @@
 #include <assert.h>
 #include <tchar.h>
 #include <map>
+#include <array>
+#include <shlwapi.h>
 #include "ILexer.h"
 #include "Lexilla.h"
 #include "DockingCont.h"
@@ -119,6 +121,7 @@ enum urlMode {urlDisable = 0, urlNoUnderLineFg, urlUnderLineFg, urlNoUnderLineBg
               urlMax = urlUnderLineBg};
 
 enum AutoIndentMode { autoIndent_none = 0, autoIndent_advanced = 1, autoIndent_basic = 2 };
+enum SysTrayAction { sta_none = 0, sta_minimize = 1, sta_close = 2 };
 
 const int LANG_INDEX_INSTR = 0;
 const int LANG_INDEX_INSTR2 = 1;
@@ -129,6 +132,14 @@ const int LANG_INDEX_TYPE4 = 5;
 const int LANG_INDEX_TYPE5 = 6;
 const int LANG_INDEX_TYPE6 = 7;
 const int LANG_INDEX_TYPE7 = 8;
+const int LANG_INDEX_SUBSTYLE1 = 9;
+const int LANG_INDEX_SUBSTYLE2 = 10;
+const int LANG_INDEX_SUBSTYLE3 = 11;
+const int LANG_INDEX_SUBSTYLE4 = 12;
+const int LANG_INDEX_SUBSTYLE5 = 13;
+const int LANG_INDEX_SUBSTYLE6 = 14;
+const int LANG_INDEX_SUBSTYLE7 = 15;
+const int LANG_INDEX_SUBSTYLE8 = 16;
 
 const int COPYDATA_PARAMS = 0;
 //const int COPYDATA_FILENAMESA = 1; // obsolete, no more useful
@@ -811,7 +822,7 @@ struct NppGUI final
 	bool _findWindowLessMode = false;
 
 	bool _isMaximized = false;
-	bool _isMinimizedToTray = false;
+	int _isMinimizedToTray = sta_none;
 	bool _rememberLastSession = true; // remember next session boolean will be written in the settings
 	bool _keepSessionAbsentFileEntries = false;
 	bool _isCmdlineNosessionActivated = false; // used for if -nosession is indicated on the launch time
@@ -1378,6 +1389,26 @@ private:
 	std::wstring _stylesXmlPath;
 };
 
+struct HLSColour
+{
+	WORD _hue = 0;
+	WORD _lightness = 0;
+	WORD _saturation = 0;
+
+	HLSColour() = default;
+	HLSColour(WORD hue, WORD lightness, WORD saturation): _hue(hue), _lightness(lightness), _saturation(saturation) {}
+	HLSColour(COLORREF rgb) { ColorRGBToHLS(rgb, &_hue, &_lightness, &_saturation); }
+
+	void loadFromRGB(COLORREF rgb) { ColorRGBToHLS(rgb, &_hue, &_lightness, &_saturation); }
+	COLORREF toRGB() const { return ColorHLSToRGB(_hue, _lightness, _saturation); }
+
+	COLORREF toRGB4DarkModWithTuning(int lightnessMore, int saturationLess) const { 
+		return ColorHLSToRGB(_hue, 
+			static_cast<WORD>(static_cast<int>(_lightness) + lightnessMore), 
+			static_cast<WORD>(static_cast<int>(_saturation) - saturationLess));
+	}
+	COLORREF toRGB4DarkMod() const { return toRGB4DarkModWithTuning(50, 20); }
+};
 
 struct UdlXmlFileState final {
 	TiXmlDocument* _udlXmlDoc = nullptr;
@@ -1729,7 +1760,9 @@ public:
 	std::wstring getWinVerBitStr() const;
 	FindHistory & getFindHistory() {return _findHistory;};
 	bool _isFindReplacing = false; // an on the fly variable for find/replace functions
+#ifndef	_WIN64
 	void safeWow64EnableWow64FsRedirection(BOOL Wow64FsEnableRedirection);
+#endif
 
 	LocalizationSwitcher & getLocalizationSwitcher() {
 		return _localizationSwitcher;
@@ -1897,6 +1930,11 @@ private:
 
 	std::wstring _loadedSessionFullFilePath;
 
+	std::array<HLSColour, 5> individualTabHuesFor_Dark{ { HLSColour{37, 60, 60}, HLSColour{70, 60, 60}, HLSColour{144, 70, 60}, HLSColour{255, 60, 60}, HLSColour{195, 60, 60} } };
+	std::array<HLSColour, 5> individualTabHues{ { HLSColour{37, 210, 150}, HLSColour{70, 210, 150}, HLSColour{144, 210, 150}, HLSColour{255, 210, 150}, HLSColour{195, 210, 150}} };
+
+	std::array<COLORREF, 3> findDlgStatusMessageColor{ red, blue, darkGreen};
+
 public:
 	void setShortcutDirty() { _isAnyShortcutModified = true; };
 	void setAdminMode(bool isAdmin) { _isAdminMode = isAdmin; }
@@ -2002,6 +2040,15 @@ public:
 	bool isPlaceHolderEnabled() const { return _isPlaceHolderEnabled; }
 	void setTheWarningHasBeenGiven(bool isEnabled) { _theWarningHasBeenGiven = isEnabled; };
 	bool theWarningHasBeenGiven() const { return _theWarningHasBeenGiven; }
+
+
+	void initTabCustomColors();
+	void setIndividualTabColor(COLORREF colour2Set, int colourIndex, bool isDarkMode);
+	COLORREF getIndividualTabColor(int colourIndex, bool isDarkMode, bool saturated);
+
+	void initFindDlgStatusMsgCustomColors();
+	void setFindDlgStatusMsgIndexColor(COLORREF colour2Set, int colourIndex);
+	COLORREF getFindDlgStatusMsgColor(int colourIndex);
 
 private:
 	void getLangKeywordsFromXmlTree();

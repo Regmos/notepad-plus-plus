@@ -190,7 +190,7 @@ public:
 	bool fileSaveAs(BufferID id = BUFFER_INVALID, bool isSaveCopy = false);
 	bool fileDelete(BufferID id = BUFFER_INVALID);
 	bool fileRename(BufferID id = BUFFER_INVALID);
-	bool fileRenameUntitled(BufferID id, const wchar_t* tabNewName);
+	bool fileRenameUntitledPluginAPI(BufferID id, const wchar_t* tabNewName);
 
 	bool switchToFile(BufferID buffer);			//find buffer in active view then in other view.
 	//@}
@@ -655,7 +655,7 @@ private:
 	void clearChangesHistory();
 	void changedHistoryGoTo(int idGoTo);
 
-	HMENU createMenuFromMenu(HMENU hSourceMenu, std::vector<int>& commandIds);
+	HMENU createMenuFromMenu(HMENU hSourceMenu, const std::vector<int>& commandIds);
 	BOOL notifyTBShowMenu(LPNMTOOLBARW lpnmtb, const char* menuPosId);
-	BOOL notifyTBShowMenu(LPNMTOOLBARW lpnmtb, const char* menuPosId, std::vector<int> cmdIDs);
+	BOOL notifyTBShowMenu(LPNMTOOLBARW lpnmtb, const char* menuPosId, const std::vector<int>& cmdIDs);
 };

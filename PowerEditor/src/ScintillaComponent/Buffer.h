@@ -83,7 +83,7 @@ public:
 
 	void beNotifiedOfBufferChange(Buffer * theBuf, int mask);
 
-	void closeBuffer(BufferID, ScintillaEditView * identifer);		//called by Notepad++
+	void closeBuffer(BufferID, const ScintillaEditView* identifer);		//called by Notepad++
 
 	void addBufferReference(BufferID id, ScintillaEditView * identifer);	//called by Scintilla etc indirectly
 
@@ -186,6 +186,8 @@ public:
 
 	bool isUntitled() const { return ((_currentStatus & DOC_UNNAMED) == DOC_UNNAMED); }
 
+	bool isFromNetwork() const { return _isFromNetwork; }
+
 	bool isInaccessible() const { return _isInaccessible; }
 	void setInaccessibility(bool val) { _isInaccessible = val; }
 
@@ -228,8 +230,8 @@ public:
 
 	void setDirty(bool dirty);
 
-	void setPosition(const Position & pos, ScintillaEditView * identifier);
-	Position & getPosition(ScintillaEditView * identifier);
+	void setPosition(const Position & pos, const ScintillaEditView * identifier);
+	Position & getPosition(const ScintillaEditView * identifier);
 
 	void setHeaderLineState(const std::vector<size_t> & folds, ScintillaEditView * identifier);
 	const std::vector<size_t> & getHeaderLineState(const ScintillaEditView * identifier) const;
@@ -239,21 +241,21 @@ public:
 	const wchar_t * getUserDefineLangName() const	{ return _userLangExt.c_str(); }
 
 	const wchar_t * getCommentLineSymbol() const {
-		Lang *l = getCurrentLang();
+		const Lang *l = getCurrentLang();
 		if (!l)
 			return NULL;
 		return l->_pCommentLineSymbol;
 	}
 
 	const wchar_t * getCommentStart() const {
-		Lang *l = getCurrentLang();
+		const Lang *l = getCurrentLang();
 		if (!l)
 			return NULL;
 		return l->_pCommentStart;
 	}
 
 	const wchar_t * getCommentEnd() const {
-		Lang *l = getCurrentLang();
+		const Lang *l = getCurrentLang();
 		if (!l)
 			return NULL;
 		return l->_pCommentEnd;
@@ -268,7 +270,7 @@ public:
 
 	//these two return reference count after operation
 	int addReference(ScintillaEditView * identifier);		//if ID not registered, creates a new Position for that ID and new foldstate
-	int removeReference(ScintillaEditView * identifier);		//reduces reference. If zero, Document is purged
+	int removeReference(const ScintillaEditView * identifier);		//reduces reference. If zero, Document is purged
 
 	void setHideLineChanged(bool isHide, size_t location);
 
@@ -276,6 +278,20 @@ public:
 
 	bool getNeedReload() const { return _needReloading; }
 	void setNeedReload(bool reload) { _needReloading = reload; }
+
+	std::wstring tabCreatedTimeString() const { return _tabCreatedTimeString; }
+	void setTabCreatedTimeStringFromBakFile() {
+		if (!_isFromNetwork && _currentStatus == DOC_UNNAMED)
+			_tabCreatedTimeString = getFileTime(Buffer::ft_created); // while DOC_UNNAMED, getFileTime will retrieve time from backup file
+	}
+	void setTabCreatedTimeStringWithCurrentTime() {
+		if (_currentStatus == DOC_UNNAMED)
+		{
+			FILETIME now{};
+			GetSystemTimeAsFileTime(&now);
+			_tabCreatedTimeString = getTimeString(now);
+		}
+	}
 
 	size_t docLength() const {
 		assert(_pManager != nullptr);
@@ -286,6 +302,7 @@ public:
 
 	enum fileTimeType { ft_created, ft_modified, ft_accessed };
 	std::wstring getFileTime(fileTimeType ftt) const;
+	std::wstring getTimeString(FILETIME rawtime) const;
 
 	Lang * getCurrentLang() const;
 
@@ -374,6 +391,7 @@ private:
 	UniMode _unicodeMode = uniUTF8;
 	int _encoding = -1;
 	bool _isUserReadOnly = false;
+	bool _isFromNetwork = false;
 	bool _needLexer = false; // new buffers do not need lexing, Scintilla takes care of that
 	//these properties have to be duplicated because of multiple references
 
@@ -390,6 +408,8 @@ private:
 	std::wstring _fullPathName;
 	wchar_t * _fileName = nullptr; // points to filename part in _fullPathName
 	bool _needReloading = false; // True if Buffer needs to be reloaded on activation
+
+	std::wstring _tabCreatedTimeString;
 
 	long _recentTag = -1;
 	static long _recentTagCtr;

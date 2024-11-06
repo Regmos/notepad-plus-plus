@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -78,7 +78,7 @@ bool SetOSAppRestart()
 		pathAppend(nppIssueLog, issueFn);
 	}
 
-	WCHAR wszCmdLine[RESTART_MAX_CMD_LINE] = { 0 };
+	wchar_t wszCmdLine[RESTART_MAX_CMD_LINE] = { 0 };
 	DWORD cchCmdLine = _countof(wszCmdLine);
 	DWORD dwPreviousFlags = 0;
 	HRESULT hr = ::GetApplicationRestartSettings(::GetCurrentProcess(), wszCmdLine, &cchCmdLine, &dwPreviousFlags);
@@ -487,7 +487,6 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			// Find in files function code should be here due to the number of parameters (2) cannot be passed via WM_COMMAND
 			constexpr int strSize = FINDREPLACE_MAXLENGTH;
-			wchar_t str[strSize]{};
 
 			bool isFirstTime = !_findReplaceDlg.isCreated();
 			_findReplaceDlg.doDialog(FIND_DLG, _nativeLangSpeaker.isRTL());
@@ -495,6 +494,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			const NppGUI & nppGui = nppParam.getNppGUI();
 			if (nppGui._fillFindFieldWithSelected)
 			{
+				wchar_t str[strSize]{};
 				_pEditView->getGenericSelectedText(str, strSize, nppGui._fillFindFieldSelectCaret);
 				_findReplaceDlg.setSearchText(str);
 			}
@@ -913,6 +913,16 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		case NPPM_INTERNAL_RELOADNATIVELANG:
 		{
 			reloadLang();
+
+			bool doNotif = wParam;
+			if (doNotif)
+			{
+				SCNotification scnN{};
+				scnN.nmhdr.code = NPPN_NATIVELANGCHANGED;
+				scnN.nmhdr.hwndFrom = _pPublicInterface->getHSelf();
+				scnN.nmhdr.idFrom = 0;
+				_pluginsManager.notify(&scnN);
+			}
 			return TRUE;
 		}
 
@@ -2286,6 +2296,8 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 		case WM_UPDATESCINTILLAS:
 		{
+			bool doChangePanel = (wParam == TRUE);
+
 			//reset styler for change in Stylers.xml
 			_mainEditView.defineDocType(_mainEditView.getCurrentBuffer()->getLangType());
 			_mainEditView.performGlobalStyles();
@@ -2296,6 +2308,8 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			addHotSpot(& _subEditView);
 
 			_findReplaceDlg.updateFinderScintilla();
+			
+			_findReplaceDlg.redraw();
 
 			drawTabbarColoursFromStylerArray();
 
@@ -2313,62 +2327,67 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			AutoCompletion::drawAutocomplete(_pEditView);
 			AutoCompletion::drawAutocomplete(_pNonEditView);
 
-			NppDarkMode::calculateTreeViewStyle();
-			auto refreshOnlyTreeView = static_cast<LPARAM>(TRUE);
-
-			// Set default fg/bg colors on internal docking dialog
-			if (pStyle && _pFuncList)
+			if (doChangePanel) // Theme change
 			{
-				_pFuncList->setBackgroundColor(pStyle->_bgColor);
-				_pFuncList->setForegroundColor(pStyle->_fgColor);
-				::SendMessage(_pFuncList->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
-			}
+				NppDarkMode::calculateTreeViewStyle();
+				auto refreshOnlyTreeView = static_cast<LPARAM>(TRUE);
 
-			if (pStyle && _pAnsiCharPanel)
-			{
-				_pAnsiCharPanel->setBackgroundColor(pStyle->_bgColor);
-				_pAnsiCharPanel->setForegroundColor(pStyle->_fgColor);
-			}
+				// Set default fg/bg colors on internal docking dialog
+				if (pStyle && _pFuncList)
+				{
+					_pFuncList->setBackgroundColor(pStyle->_bgColor);
+					_pFuncList->setForegroundColor(pStyle->_fgColor);
+					::SendMessage(_pFuncList->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				}
 
-			if (pStyle && _pDocumentListPanel)
-			{
-				_pDocumentListPanel->setBackgroundColor(pStyle->_bgColor);
-				_pDocumentListPanel->setForegroundColor(pStyle->_fgColor);
-			}
+				if (pStyle && _pAnsiCharPanel)
+				{
+					_pAnsiCharPanel->setBackgroundColor(pStyle->_bgColor);
+					_pAnsiCharPanel->setForegroundColor(pStyle->_fgColor);
+				}
 
-			if (pStyle && _pClipboardHistoryPanel)
-			{
-				_pClipboardHistoryPanel->setBackgroundColor(pStyle->_bgColor);
-				_pClipboardHistoryPanel->setForegroundColor(pStyle->_fgColor);
-				_pClipboardHistoryPanel->redraw(true);
-			}
+				if (pStyle && _pDocumentListPanel)
+				{
+					_pDocumentListPanel->setBackgroundColor(pStyle->_bgColor);
+					_pDocumentListPanel->setForegroundColor(pStyle->_fgColor);
+				}
 
-			if (pStyle && _pProjectPanel_1)
-			{
-				_pProjectPanel_1->setBackgroundColor(pStyle->_bgColor);
-				_pProjectPanel_1->setForegroundColor(pStyle->_fgColor);
-				::SendMessage(_pProjectPanel_1->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
-			}
+				if (pStyle && _pClipboardHistoryPanel)
+				{
+					_pClipboardHistoryPanel->setBackgroundColor(pStyle->_bgColor);
+					_pClipboardHistoryPanel->setForegroundColor(pStyle->_fgColor);
+					_pClipboardHistoryPanel->redraw(true);
+				}
 
-			if (pStyle && _pProjectPanel_2)
-			{
-				_pProjectPanel_2->setBackgroundColor(pStyle->_bgColor);
-				_pProjectPanel_2->setForegroundColor(pStyle->_fgColor);
-				::SendMessage(_pProjectPanel_2->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
-			}
+				if (pStyle && _pProjectPanel_1)
+				{
+					_pProjectPanel_1->setBackgroundColor(pStyle->_bgColor);
+					_pProjectPanel_1->setForegroundColor(pStyle->_fgColor);
+					::SendMessage(_pProjectPanel_1->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				}
 
-			if (pStyle && _pProjectPanel_3)
-			{
-				_pProjectPanel_3->setBackgroundColor(pStyle->_bgColor);
-				_pProjectPanel_3->setForegroundColor(pStyle->_fgColor);
-				::SendMessage(_pProjectPanel_3->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
-			}
+				if (pStyle && _pProjectPanel_2)
+				{
+					_pProjectPanel_2->setBackgroundColor(pStyle->_bgColor);
+					_pProjectPanel_2->setForegroundColor(pStyle->_fgColor);
+					::SendMessage(_pProjectPanel_2->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				}
 
-			if (pStyle && _pFileBrowser)
-			{
-				_pFileBrowser->setBackgroundColor(pStyle->_bgColor);
-				_pFileBrowser->setForegroundColor(pStyle->_fgColor);
-				::SendMessage(_pFileBrowser->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				if (pStyle && _pProjectPanel_3)
+				{
+					_pProjectPanel_3->setBackgroundColor(pStyle->_bgColor);
+					_pProjectPanel_3->setForegroundColor(pStyle->_fgColor);
+					::SendMessage(_pProjectPanel_3->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				}
+
+				if (pStyle && _pFileBrowser)
+				{
+					_pFileBrowser->setBackgroundColor(pStyle->_bgColor);
+					_pFileBrowser->setForegroundColor(pStyle->_fgColor);
+					::SendMessage(_pFileBrowser->getHSelf(), NPPM_INTERNAL_REFRESHDARKMODE, 0, refreshOnlyTreeView);
+				}
+
+				NppDarkMode::updateTreeViewStylePrev();
 			}
 
 			if (_pDocMap)
@@ -2693,7 +2712,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 				_isAttemptingCloseOnQuit = false;
 
 				if (nppgui._rememberLastSession)
-					_lastRecentFileList.setLock(false);	//only lock when the session is remembered
+					_lastRecentFileList.setLock(false);	//only unlock when the session is remembered
 
 				if (!saveProjectPanelsParams()) allClosed = false; //writeProjectPanelsSettings
 				saveFileBrowserParam();
@@ -2833,7 +2852,9 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		case WM_SYSCOMMAND:
 		{
 			const NppGUI & nppgui = (nppParam.getNppGUI());
-			if ((nppgui._isMinimizedToTray || _pPublicInterface->isPrelaunch()) && (wParam == SC_MINIMIZE))
+			if (((nppgui._isMinimizedToTray == sta_minimize || _pPublicInterface->isPrelaunch()) && (wParam == SC_MINIMIZE)) ||
+				(nppgui._isMinimizedToTray == sta_close && wParam == SC_CLOSE)
+			)
 			{
 				if (nullptr == _pTrayIco)
 				{
@@ -3122,7 +3143,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			
 			if ((tabIndex >= 0) && (tabIndex < static_cast<int>(pDt->nbItem())))
 			{
-				colorId = pDt->getIndividualTabColour(tabIndex);
+				colorId = pDt->getIndividualTabColourId(tabIndex);
 			}
 			
 			return colorId;
@@ -3131,7 +3152,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		case NPPM_SETUNTITLEDNAME:
 		{
 			if (!wParam || !lParam) return FALSE;
-			return fileRenameUntitled(reinterpret_cast<BufferID>(wParam), reinterpret_cast<const wchar_t*>(lParam));
+			return fileRenameUntitledPluginAPI(reinterpret_cast<BufferID>(wParam), reinterpret_cast<const wchar_t*>(lParam));
 		}
 
 		case NPPM_GETBOOKMARKID:
@@ -3723,7 +3744,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			const Buffer* buf = _pEditView->getCurrentBuffer();
 			wstring path = buf ? buf->getFullPathName() : L"";
-			PathRemoveFileSpec(path);
+			pathRemoveFileSpec(path);
 			setWorkingDir(path.c_str());
 			return TRUE;
 		}
@@ -3738,6 +3759,24 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			scnN.nmhdr.idFrom = 0;
 			_pluginsManager.notify(&scnN);
 			return TRUE;
+		}
+
+		case NPPM_GETNATIVELANGFILENAME:
+		{
+			const char* fn = _nativeLangSpeaker.getFileName();
+
+			if (!fn) return 0;
+
+			string fileName = fn;
+			if (lParam != 0)
+			{
+				if (fileName.length() >= static_cast<size_t>(wParam))
+				{
+					return 0;
+				}
+				strcpy(reinterpret_cast<char*>(lParam), fileName.c_str());
+			}
+			return fileName.length();
 		}
 
 		default:

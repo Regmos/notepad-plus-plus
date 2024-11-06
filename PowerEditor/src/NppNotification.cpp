@@ -283,7 +283,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 						int iView = isFromPrimary?MAIN_VIEW:SUB_VIEW;
 						if (buf->isDirty())
 						{
-							wstring msg, title;
 							_nativeLangSpeaker.messageBox("CannotMoveDoc",
 								_pPublicInterface->getHSelf(),
 								L"Document is modified, save it then try again.",
@@ -324,7 +323,11 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				activateBuffer(bufferToClose, iView);
 			}
 
-			if (fileClose(bufferToClose, iView))
+			BufferID bufferToClose2ndCheck = notifyDocTab->getBufferByIndex(index);
+
+			if ((bufferToClose == bufferToClose2ndCheck) // Here we make sure the buffer is the same to prevent from the situation that the buffer to be close was already closed,
+			                                             // because the precedent call "activateBuffer(bufferToClose, iView)" could finally lead "doClose" call as well (in case of file non-existent).
+				&& fileClose(bufferToClose, iView))
 				checkDocState();
 
 			break;
@@ -371,24 +374,30 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					_statusBar.setText((_pEditView->execute(SCI_GETOVERTYPE)) ? L"OVR" : L"INS", STATUSBAR_TYPING_MODE);
 				}
 			}
-			else if (notification->nmhdr.hwndFrom == _mainDocTab.getHSelf() && _activeView == SUB_VIEW)
+			else if (notification->nmhdr.hwndFrom == _mainDocTab.getHSelf())
 			{
-				bool isSnapshotMode = NppParameters::getInstance().getNppGUI().isSnapshotMode();
-				if (isSnapshotMode)
+				if (_activeView == SUB_VIEW)
 				{
-					// Before switching off, synchronize backup file
-					MainFileManager.backupCurrentBuffer();
+					bool isSnapshotMode = NppParameters::getInstance().getNppGUI().isSnapshotMode();
+					if (isSnapshotMode)
+					{
+						// Before switching off, synchronize backup file
+						MainFileManager.backupCurrentBuffer();
+					}
 				}
 				// Switch off
 				switchEditViewTo(MAIN_VIEW);
 			}
-			else if (notification->nmhdr.hwndFrom == _subDocTab.getHSelf() && _activeView == MAIN_VIEW)
+			else if (notification->nmhdr.hwndFrom == _subDocTab.getHSelf())
 			{
-				bool isSnapshotMode = NppParameters::getInstance().getNppGUI().isSnapshotMode();
-				if (isSnapshotMode)
+				if (_activeView == MAIN_VIEW)
 				{
-					// Before switching off, synchronize backup file
-					MainFileManager.backupCurrentBuffer();
+					bool isSnapshotMode = NppParameters::getInstance().getNppGUI().isSnapshotMode();
+					if (isSnapshotMode)
+					{
+						// Before switching off, synchronize backup file
+						MainFileManager.backupCurrentBuffer();
+					}
 				}
 				// Switch off
 				switchEditViewTo(SUB_VIEW);
@@ -516,10 +525,11 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				return TRUE;
 			//break;
 
+			NppParameters& nppParam = NppParameters::getInstance();
+
 			if (!_tabPopupMenu.isCreated())
 			{
 				std::vector<MenuItemUnit> itemUnitArray;
-				NppParameters& nppParam = NppParameters::getInstance();
 
 				if (nppParam.hasCustomTabContextMenu())
 				{
@@ -575,7 +585,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			// Adds colour icons
 			for (int i = 0; i < 5; ++i)
 			{
-				COLORREF colour = NppDarkMode::getIndividualTabColour(i, NppDarkMode::isDarkMenuEnabled(), true);
+				COLORREF colour = nppParam.getIndividualTabColor(i, NppDarkMode::isDarkMenuEnabled(), true);
 				HBITMAP hBitmap = generateSolidColourMenuItemIcon(colour);
 				SetMenuItemBitmaps(_tabPopupMenu.getMenuHandle(), IDM_VIEW_TAB_COLOUR_1 + i, MF_BYCOMMAND, hBitmap, hBitmap);
 			}
@@ -979,38 +989,45 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					wcscpy_s(lpttt->szText, tipTmp.c_str());
 					return TRUE;
 				}
-				else if (hWin == _mainDocTab.getHSelf())
+				else 
 				{
-					BufferID idd = _mainDocTab.getBufferByIndex(id);
-					Buffer * buf = MainFileManager.getBufferByID(idd);
+					BufferID idd = BUFFER_INVALID;
+					if (hWin == _mainDocTab.getHSelf())
+						idd = _mainDocTab.getBufferByIndex(id);
+					else if (hWin == _subDocTab.getHSelf())
+						idd = _subDocTab.getBufferByIndex(id);
+					else
+						return FALSE;
+
+					Buffer* buf = MainFileManager.getBufferByID(idd);
 					if (buf == nullptr)
 						return FALSE;
 
 					tipTmp = buf->getFullPathName();
 
+					
+					if (buf->isUntitled())
+					{
+						wstring tabCreatedTime = buf->tabCreatedTimeString();
+						if (!tabCreatedTime.empty())
+						{
+							tipTmp += L"\r";
+							tipTmp += tabCreatedTime;
+							SendMessage(lpttt->hdr.hwndFrom, TTM_SETMAXTIPWIDTH, 0, 200);
+						}
+					}
+					else
+					{
+						SendMessage(lpttt->hdr.hwndFrom, TTM_SETMAXTIPWIDTH, 0, -1);
+					}
+
 					if (tipTmp.length() >= tipMaxLen)
 						return FALSE;
+
 					wcscpy_s(docTip, tipTmp.c_str());
 					lpttt->lpszText = docTip;
 					return TRUE;
 				}
-				else if (hWin == _subDocTab.getHSelf())
-				{
-					BufferID idd = _subDocTab.getBufferByIndex(id);
-					Buffer * buf = MainFileManager.getBufferByID(idd);
-					if (buf == nullptr)
-						return FALSE;
-
-					tipTmp = buf->getFullPathName();
-
-					if (tipTmp.length() >= tipMaxLen)
-						return FALSE;
-					wcscpy_s(docTip, tipTmp.c_str());
-					lpttt->lpszText = docTip;
-					return TRUE;
-				}
-				else
-					return FALSE;
 			}
 			catch (...)
 			{

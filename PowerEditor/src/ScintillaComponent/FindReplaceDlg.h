@@ -38,7 +38,10 @@ enum DIALOG_TYPE {FIND_DLG, REPLACE_DLG, FINDINFILES_DLG, FINDINPROJECTS_DLG, MA
 #define DIR_DOWN true
 #define DIR_UP false
 
-//#define FIND_REPLACE_STR_MAX 256
+#define FIND_STATUS_END_REACHED_TEXT L"Find: Reached document end, first occurrence from the top found."
+#define FIND_STATUS_TOP_REACHED_TEXT L"Find:  Reached document beginning, first occurrence from the bottom found."
+#define FIND_STATUS_REPLACE_END_REACHED_TEXT L"Replace: Reached document end, started from top."
+#define FIND_STATUS_REPLACE_TOP_REACHED_TEXT L"Replace: Reached document beginning, started from bottom."
 
 enum InWhat{ALL_OPEN_DOCS, FILES_IN_DIR, CURRENT_DOC, CURR_DOC_SELECTION, FILES_IN_PROJECTS};
 
@@ -391,7 +394,7 @@ public :
 
 	void execSavedCommand(int cmd, uptr_t intValue, const std::wstring& stringValue);
 	void clearMarks(const FindOption& opt);
-	void setStatusbarMessage(const std::wstring & msg, FindStatus staus, std::wstring tooltipMsg = L"");
+	void setStatusbarMessage(const std::wstring & msg, FindStatus staus, const std::wstring& tooltipMsg = L"");
 	void setStatusbarMessageWithRegExprErr(ScintillaEditView* pEditView);
 	std::wstring getScopeInfoForStatusBar(FindOption const *pFindOpt) const;
 	Finder * createFinder();
@@ -500,7 +503,7 @@ private:
 	static const int FR_OP_FIP = 16;
 	void saveInMacro(size_t cmd, int cmdType);
 	void drawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
-	bool replaceInFilesConfirmCheck(std::wstring directory, std::wstring fileTypes);
+	bool replaceInFilesConfirmCheck(const std::wstring& directory, const std::wstring& fileTypes);
 	bool replaceInProjectsConfirmCheck();
 	bool replaceInOpenDocsConfirmCheck(void);
 

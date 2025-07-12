@@ -48,7 +48,7 @@ const bool dirDown = false;
 #endif
 
 
-#define NPP_INTERNAL_FUCTION_STR L"Notepad++::InternalFunction"
+#define NPP_INTERNAL_FUNCTION_STR L"Notepad++::InternalFunction"
 
 
 std::wstring folderBrowser(HWND parent, const std::wstring & title = L"", int outputCtrlID = 0, const wchar_t *defaultStr = NULL);
@@ -220,6 +220,7 @@ std::wstring getDateTimeStrFrom(const std::wstring& dateTimeFormat, const SYSTEM
 
 HFONT createFont(const wchar_t* fontName, int fontSize, bool isBold, HWND hDestParent);
 bool removeReadOnlyFlagFromFileAttributes(const wchar_t* fileFullPath);
+bool toggleReadOnlyFlagFromFileAttributes(const wchar_t* fileFullPath, bool& isChangedToReadOnly);
 
 bool isWin32NamespacePrefixedFileName(const std::wstring& fileName);
 bool isWin32NamespacePrefixedFileName(const wchar_t* szFileName);

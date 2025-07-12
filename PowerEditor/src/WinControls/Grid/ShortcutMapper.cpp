@@ -24,7 +24,6 @@ using namespace std;
 void ShortcutMapper::initTabs()
 {
 	_hTabCtrl = ::GetDlgItem(_hSelf, IDC_BABYGRID_TABBAR);
-	NppDarkMode::subclassTabControl(_hTabCtrl);
 	TCITEM tie{};
 	tie.mask = TCIF_TEXT;
 
@@ -544,6 +543,19 @@ void ShortcutMapper::resizeDialogElements()
 	::GetWindowRect(hFilterEdit, &rcFilterEdit);
 	::MapWindowPoints(nullptr, _hSelf, reinterpret_cast<LPPOINT>(&rcFilterEdit), 2);
 
+	HWND hFilterClearBtn = ::GetDlgItem(_hSelf, IDC_BABYGRID_FILTER_CLEAR);
+
+	int clrBtnWidth = rcFilterEdit.bottom - rcFilterEdit.top;
+	int clrBtnHeight = clrBtnWidth;
+
+	int filterEditLeft = rcFilterEdit.left;
+	int filterEditTop = rcFilterEdit.top;
+	int filterEditWidth = rcClient.right - filterEditLeft - clrBtnWidth - 5;
+	int filterEditHeight = clrBtnHeight;
+
+	int clrBtnLeft = filterEditLeft + filterEditWidth + 1;
+	int clrBtnTop = filterEditTop;
+
 	RECT rcInfo{};
 	HWND hInfo = ::GetDlgItem(_hSelf, IDC_BABYGRID_INFO);
 	::GetWindowRect(hInfo, &rcInfo);
@@ -560,10 +572,9 @@ void ShortcutMapper::resizeDialogElements()
 	::InflateRect(&rcClient, -padding, -(gapBtn + getRcHeight(rcOkBtn)));
 
 	const int gapBtnEdit = rcClearBtn.top - rcFilterEdit.bottom;
-	const int heightFilter = getRcHeight(rcFilterEdit);
 	const int heightInfo = getRcHeight(rcInfo);
 
-	constexpr int nCtrls = 7;
+	constexpr int nCtrls = 8;
 	auto hdwp = ::BeginDeferWindowPos(nCtrls);
 
 	hdwp = setOrDeferWindowPos(hdwp, hModBtn, nullptr, center - gapBtnHalf - wBtn * 2 - gapBtn, rcClient.bottom, 0, 0, SWP_NOSIZE | flags);
@@ -571,9 +582,10 @@ void ShortcutMapper::resizeDialogElements()
 	hdwp = setOrDeferWindowPos(hdwp, hDelBtn, nullptr, center + gapBtnHalf, rcClient.bottom, 0, 0, SWP_NOSIZE | flags);
 	hdwp = setOrDeferWindowPos(hdwp, hOkBtn, nullptr, center + gapBtnHalf + wBtn + gapBtn, rcClient.bottom, 0, 0, SWP_NOSIZE | flags);
 
-	rcClient.bottom -= (gapBtnEdit + heightFilter);
+	rcClient.bottom -= (gapBtnEdit + filterEditHeight);
 	hdwp = setOrDeferWindowPos(hdwp, hStatic, nullptr, rcClient.left, rcClient.bottom + gapBtnEdit / 2, 0, 0, SWP_NOSIZE | flags);
-	hdwp = setOrDeferWindowPos(hdwp, hFilterEdit, nullptr, rcFilterEdit.left, rcClient.bottom, rcClient.right - rcFilterEdit.left, heightFilter, flags);
+	hdwp = setOrDeferWindowPos(hdwp, hFilterEdit, nullptr, filterEditLeft, filterEditTop, filterEditWidth, filterEditHeight, flags);
+	hdwp = setOrDeferWindowPos(hdwp, hFilterClearBtn, nullptr, clrBtnLeft, clrBtnTop, clrBtnWidth, clrBtnHeight, SWP_SHOWWINDOW | SWP_NOACTIVATE | flags);
 	hdwp = setOrDeferWindowPos(hdwp, hInfo, nullptr, rcClient.left, rcClient.bottom - gapBtnEdit - heightInfo, getRcWidth(rcClient), heightInfo, flags);
 
 	if (hdwp)
@@ -888,7 +900,7 @@ intptr_t CALLBACK ShortcutMapper::run_dlgProc(UINT message, WPARAM wParam, LPARA
 							shortcut._isShift = FALSE;
 							shortcut._key = '\0';
 
-							::SendMessage(_hParent, NPPM_INTERNAL_PLUGINSHORTCUTMOTIFIED, cmdID, reinterpret_cast<LPARAM>(&shortcut));
+							::SendMessage(_hParent, NPPM_INTERNAL_PLUGINSHORTCUTMODIFIED, cmdID, reinterpret_cast<LPARAM>(&shortcut));
 							nppParam.setShortcutDirty();
 						}
 						break;
@@ -1025,7 +1037,7 @@ intptr_t CALLBACK ShortcutMapper::run_dlgProc(UINT message, WPARAM wParam, LPARA
 								shortcut._isShift = pcsc.getKeyCombo()._isShift;
 								shortcut._key = pcsc.getKeyCombo()._key;
 
-								::SendMessage(_hParent, NPPM_INTERNAL_PLUGINSHORTCUTMOTIFIED, cmdID, reinterpret_cast<LPARAM>(&shortcut));
+								::SendMessage(_hParent, NPPM_INTERNAL_PLUGINSHORTCUTMODIFIED, cmdID, reinterpret_cast<LPARAM>(&shortcut));
 								nppParam.setShortcutDirty();
 							}
 						}
@@ -1122,7 +1134,7 @@ intptr_t CALLBACK ShortcutMapper::run_dlgProc(UINT message, WPARAM wParam, LPARA
 									ms.setID(ms.getID() - 1);	//shift all IDs
 									theMacros[i] = ms;
 
-									// Ajust menu items
+									// Adjust menu items
 									MenuItemUnit& miu = macroMenu.getItemFromIndex(i);
 									miu._cmdID -= 1;	//shift all IDs
 								}
@@ -1178,7 +1190,7 @@ intptr_t CALLBACK ShortcutMapper::run_dlgProc(UINT message, WPARAM wParam, LPARA
 									uc.setID(uc.getID() - 1);	//shift all IDs
 									theUserCmds[i] = uc;
 
-									// Ajust menu items
+									// Adjust menu items
 									MenuItemUnit& miu = runMenu.getItemFromIndex(i);
 									miu._cmdID -= 1;	//shift all IDs
 								}
@@ -1361,7 +1373,13 @@ intptr_t CALLBACK ShortcutMapper::run_dlgProc(UINT message, WPARAM wParam, LPARA
 					}
 					return TRUE;
 				}
-
+				case IDC_BABYGRID_FILTER_CLEAR:
+				{
+					HWND hFilterEdit = ::GetDlgItem(_hSelf, IDC_BABYGRID_FILTER);
+					::SetWindowText(hFilterEdit, L"");
+					::SetFocus(hFilterEdit);
+					return TRUE;
+				}
 				default:
 				{
 					break;

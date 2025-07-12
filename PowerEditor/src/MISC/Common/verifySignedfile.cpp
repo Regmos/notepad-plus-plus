@@ -36,11 +36,13 @@ SecurityMode SecurityGuard::_securityMode = sm_certif;
 
 SecurityGuard::SecurityGuard()
 {
-	_gupSha256.push_back(L"4c8191f511c2ad67148ef809b40c1108aaa074130547157c335a959404d8d6f6"); // v5.1 32 bit (signed)
-	_gupSha256.push_back(L"268a65829e86d5c3d324eea79b51e59f0a7d07c69d3ba0f700c9cb3aa772566f"); // v5.1 64 bit (signed)
+	_gupSha256.push_back(L"1f72af0d9f108d99981f58837c26de16b46f6233ccd76ef560ba756094699404"); // v5.3.3 x64 bit (unsigned)
+	_gupSha256.push_back(L"7a5068be842ed50d9857be29da2e27e7b0243f6ced3763d1ac4640a9cadc6ee7"); // v5.3.3 x86 bit (unsigned)
+	_gupSha256.push_back(L"57f10b58d9492026d1bf74611a522da9ed05a682ae5ddeffe6c1c16ba839a89b"); // v5.3.3 arm64 bit (unsigned)
 
-	_pluginListSha256.push_back(L"a4a7e57d605f29b294378d0d94fc867b9febd6a1cc63f1bb69bcb7609dc25f2c"); // v1.0.8 32 bit (unsigned)
-	_pluginListSha256.push_back(L"1c404fd3578273f5ecde585af82179ff3b63c635fb4fa24be21ebde708e403e4"); // v1.0.8 64 bit (unsigned)
+	_pluginListSha256.push_back(L"311a92116cf2ea649f87c6f05f4325d8b8370ca6b624ecf1174ec559859b203c"); // v1.8.4 x64 bit (unsigned)
+	_pluginListSha256.push_back(L"c7253eaafb43d5d63356830122d27ae4f9b22b98e4656a195c20d5ae35d537f3"); // v1.8.4 x86 bit (unsigned)
+	_pluginListSha256.push_back(L"2a684a000843f43d81096b5515f3386120c4256f369323db2def401e72e38792"); // v1.8.4 arm64 bit (unsigned)
 }
 
 bool SecurityGuard::checkModule([[maybe_unused]] const std::wstring& filePath, [[maybe_unused]] NppModule module2check)
@@ -145,7 +147,7 @@ bool SecurityGuard::verifySignedLibrary(const std::wstring& filepath)
 	else
 	{
 		// if offline, revocation is not checked
-		// depending of windows version, this may introduce a latency on offline systems
+		// depending on windows version, this may introduce a latency on offline systems
 		DWORD netstatus;
 		QOCINFO oci;
 		oci.dwSize = sizeof(oci);
@@ -159,7 +161,7 @@ bool SecurityGuard::verifySignedLibrary(const std::wstring& filepath)
 			winTEXTrust_data.fdwRevocationChecks = WTD_REVOKE_NONE;
 
 			if (doLogCertifError)
-				writeLog(L"c:\\tmp\\certifError.log", "VerifyLibrary: system is offline - certificate revocation wont be checked");
+				writeLog(L"c:\\tmp\\certifError.log", "VerifyLibrary: system is offline - certificate revocation won't be checked");
 		}
 	}
 
@@ -251,7 +253,7 @@ bool SecurityGuard::verifySignedLibrary(const std::wstring& filepath)
 		std::unique_ptr<wchar_t[]> subject_buffer(new wchar_t[subject_sze]);
 		if (::CertNameToStr(X509_ASN_ENCODING, &context->pCertInfo->Subject, CERT_X500_NAME_STR, subject_buffer.get(), subject_sze) <= 1)
 		{
-			throw string("Failed to get x509 filed infos from certificate.");
+			throw string("Failed to get x509 field infos from certificate.");
 		}
 		subject = subject_buffer.get();
 
@@ -299,7 +301,7 @@ bool SecurityGuard::verifySignedLibrary(const std::wstring& filepath)
 		if (doLogCertifError)
 		{
 			string msg = s;
-			msg += " - VerifyLibrary: error while getting certificate informations";
+			msg += " - VerifyLibrary: error while getting certificate information";
 			writeLog(L"c:\\tmp\\certifError.log", msg.c_str());
 		}
 		status = false;
@@ -307,7 +309,7 @@ bool SecurityGuard::verifySignedLibrary(const std::wstring& filepath)
 	catch (...) {
 		// Unknown error
 		if (doLogCertifError)
-			writeLog(L"c:\\tmp\\certifError.log", "VerifyLibrary: error while getting certificate informations");
+			writeLog(L"c:\\tmp\\certifError.log", "VerifyLibrary: error while getting certificate information");
 
 		status = false;
 	}

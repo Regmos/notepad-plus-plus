@@ -1260,7 +1260,7 @@ bool isCertificateValidated(const wstring & fullFilePath, const wstring & subjec
 	catch (...)
 	{
 		// Unknown error
-		wstring errorMessage = L"Unknown exception occured. ";
+		wstring errorMessage = L"Unknown exception occurred. ";
 		errorMessage += GetLastErrorAsString(GetLastError());
 		MessageBox(NULL, errorMessage.c_str(), L"Certificate checking", MB_OK);
 	}
@@ -1323,7 +1323,7 @@ bool deleteFileOrFolder(const wstring& f2delete)
 	return (res == 0);
 }
 
-// Get a vector of full file paths in a given folder. File extension type filter should be *.*, *.xml, *.dll... according the type of file you want to get.  
+// Get a vector of full file paths in a given folder. File extension type filter should be *.*, *.xml, *.dll... according to the type of file you want to get.  
 void getFilesInFolder(std::vector<wstring>& files, const wstring& extTypeFilter, const wstring& inFolder)
 {
 	wstring filter = inFolder;
@@ -1515,6 +1515,31 @@ bool removeReadOnlyFlagFromFileAttributes(const wchar_t* fileFullPath)
 
 	dwFileAttribs &= ~FILE_ATTRIBUTE_READONLY;
 	return (::SetFileAttributes(fileFullPath, dwFileAttribs) != FALSE);
+}
+
+// return false when failed, otherwise true and then the isChangedToReadOnly output will be set
+// accordingly to the changed file R/O-state
+bool toggleReadOnlyFlagFromFileAttributes(const wchar_t* fileFullPath, bool& isChangedToReadOnly)
+{
+	DWORD dwFileAttribs = ::GetFileAttributes(fileFullPath);
+	if (dwFileAttribs == INVALID_FILE_ATTRIBUTES || (dwFileAttribs & FILE_ATTRIBUTE_DIRECTORY))
+		return false;
+
+	if (dwFileAttribs & FILE_ATTRIBUTE_READONLY)
+		dwFileAttribs &= ~FILE_ATTRIBUTE_READONLY;
+	else
+		dwFileAttribs |= FILE_ATTRIBUTE_READONLY;
+	
+	if (::SetFileAttributes(fileFullPath, dwFileAttribs))
+	{
+		isChangedToReadOnly = (dwFileAttribs & FILE_ATTRIBUTE_READONLY) != 0;
+		return true;
+	}
+	else
+	{
+		// probably the ERROR_ACCESS_DENIED (5) (TODO: UAC-prompt candidate)
+		return false;
+	}
 }
 
 // "For file I/O, the "\\?\" prefix to a path string tells the Windows APIs to disable all string parsing
@@ -1782,13 +1807,13 @@ int Version::compareTo(const Version& v2c) const
 
 bool Version::isCompatibleTo(const Version& from, const Version& to) const
 {
-	// This method determinates if Version object is in between "from" version and "to" version, it's useful for testing compatibility of application.
+	// This method determines if Version object is in between "from" version and "to" version, it's useful for testing compatibility of application.
 	// test in versions <from, to> example: 
 	// 1. <0.0.0.0, 0.0.0.0>: both from to versions are empty, so it's 
 	// 2. <6.9, 6.9>: plugin is compatible to only v6.9
 	// 3. <4.2, 6.6.6>: from v4.2 (included) to v6.6.6 (included)
 	// 4. <0.0.0.0, 8.2.1>: all version until v8.2.1 (included)
-	// 5. <8.3, 0.0.0.0>: from v8.3 (included) to the latest verrsion
+	// 5. <8.3, 0.0.0.0>: from v8.3 (included) to the latest version
 	
 	if (empty()) // if this version is empty, then no compatible to all version
 		return false;

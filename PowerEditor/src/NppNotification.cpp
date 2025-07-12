@@ -50,7 +50,19 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			if (notification->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
 			{
+				// Make temporary tab name automatically by using the 1st line of content for untitled documents
+				Buffer* buffer = notifyView->getCurrentBuffer();
+				const NewDocDefaultSettings& ndds = NppParameters::getInstance().getNppGUI().getNewDocDefaultSettings();
+				intptr_t curLineIndex = _pEditView->execute(SCI_LINEFROMPOSITION, notification->position);
+				if (curLineIndex == 0 && ndds._useContentAsTabName && buffer->isUntitled() && !buffer->isUntitledTabRenamed())
+				{
+					useFirstLineAsTabName(buffer);
+				}
+
+				// Hold the correct position for "Begin/End &Select" or "Begin/End Select in Column Mode" commands
 				_pEditView->updateBeginEndSelectPosition(notification->modificationType & SC_MOD_INSERTTEXT, notification->position, notification->length);
+
+				// While the text modification, we make sure the link beblow the modification will be reprocessed
 				_linkTriggered = true;
 				::InvalidateRect(notifyView->getHSelf(), NULL, TRUE);
 			}
@@ -114,7 +126,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					isDirty = true;
 			}
 
-			if (buf->isUnsync()) // buffer in Notepad++ is not syncronized with the file on disk - in this case the buffer is always dirty 
+			if (buf->isUnsync()) // buffer in Notepad++ is not synchronized with the file on disk - in this case the buffer is always dirty 
 				isDirty = true;
 
 			if (buf->isSavePointDirty())
@@ -404,7 +416,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			if (nppParam._isFindReplacing)
 				break;
 
-			if (notification->nmhdr.hwndFrom != _pEditView->getHSelf() && currentBuf->allowSmartHilite()) // notification come from unfocus view - both views ae visible
+			if (notification->nmhdr.hwndFrom != _pEditView->getHSelf() && currentBuf->allowSmartHilite()) // notification come from unfocus view - both views are visible
 			{
 				if (nppGui._smartHiliteOnAnotherView)
 				{
@@ -429,8 +441,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					nppGui._disableSmartHiliteTmp = false;
 				else
 				{
-					ScintillaEditView* anbotherView = isFromPrimary ? &_subEditView : &_mainEditView;
-					_smartHighlighter.highlightView(notifyView, anbotherView);
+					ScintillaEditView* anotherView = isFromPrimary ? &_subEditView : &_mainEditView;
+					_smartHighlighter.highlightView(notifyView, anotherView);
 				}
 			}
 
@@ -497,7 +509,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			notifyView->updateLineNumberWidth();
 
 			if (_syncInfo.doSync())
-				doSynScorll(HWND(notification->nmhdr.hwndFrom));
+				doSynScroll(HWND(notification->nmhdr.hwndFrom));
 
 			const NppParameters& nppParam = NppParameters::getInstance();
 
@@ -777,7 +789,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			BufferID bufferToClose2ndCheck = notifyDocTab->getBufferByIndex(index);
 
 			if ((bufferToClose == bufferToClose2ndCheck) // Here we make sure the buffer is the same to prevent from the situation that the buffer to be close was already closed,
-			                                             // because the precedent call "activateBuffer(bufferToClose, iView)" could finally lead "doClose" call as well (in case of file non-existent).
+			                                             // because the preceding call "activateBuffer(bufferToClose, iView)" could finally lead "doClose" call as well (in case of file non-existent).
 				&& fileClose(bufferToClose, iView))
 				checkDocState();
 
@@ -1036,8 +1048,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_RELOAD, L"Reload"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_PRINT, L"Print"));
 					itemUnitArray.push_back(MenuItemUnit(0, NULL));
-					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_SETREADONLY, L"Read-Only"));
-					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_CLEARREADONLY, L"Clear Read-Only Flag"));
+					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_TOGGLEREADONLY, L"Read-Only in Notepad++"));
+					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_TOGGLESYSTEMREADONLY, L"Read-Only Attribute in Windows"));
 					itemUnitArray.push_back(MenuItemUnit(0, NULL));
 					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_FULLPATHTOCLIP, L"Copy Full File Path", L"Copy to Clipboard"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_EDIT_FILENAMETOCLIP, L"Copy Filename", L"Copy to Clipboard"));
@@ -1075,14 +1087,22 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			Buffer* buf = _pEditView->getCurrentBuffer();
 			bool isUserReadOnly = buf->getUserReadOnly();
-			_tabPopupMenu.checkItem(IDM_EDIT_SETREADONLY, isUserReadOnly);
+			_tabPopupMenu.checkItem(IDM_EDIT_TOGGLEREADONLY, isUserReadOnly);
 
 			bool isSysReadOnly = buf->getFileReadOnly();
 			bool isInaccessible = buf->isInaccessible();
-			_tabPopupMenu.enableItem(IDM_EDIT_SETREADONLY, !isSysReadOnly && !buf->isMonitoringOn());
-			_tabPopupMenu.enableItem(IDM_EDIT_CLEARREADONLY, isSysReadOnly);
-			if (isInaccessible)
-				_tabPopupMenu.enableItem(IDM_EDIT_CLEARREADONLY, false);
+			bool isUntitled = buf->isUntitled();
+			_tabPopupMenu.enableItem(IDM_EDIT_TOGGLEREADONLY, !isSysReadOnly && !buf->isMonitoringOn());
+			if (isInaccessible || isUntitled)
+			{
+				_tabPopupMenu.checkItem(IDM_EDIT_TOGGLESYSTEMREADONLY, false);
+				_tabPopupMenu.enableItem(IDM_EDIT_TOGGLESYSTEMREADONLY, false);
+			}
+			else
+			{
+				_tabPopupMenu.enableItem(IDM_EDIT_TOGGLESYSTEMREADONLY, true);
+				_tabPopupMenu.checkItem(IDM_EDIT_TOGGLESYSTEMREADONLY, isSysReadOnly);
+			}
 
 			bool isFileExisting = doesFileExist(buf->getFullPathName());
 			_tabPopupMenu.enableItem(IDM_FILE_DELETE, isFileExisting);
@@ -1094,7 +1114,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			_tabPopupMenu.enableItem(IDM_FILE_OPEN_DEFAULT_VIEWER, isAssoCommandExisting(buf->getFullPathName()));
 
 			bool isDirty = buf->isDirty();
-			bool isUntitled = buf->isUntitled();
 			_tabPopupMenu.enableItem(IDM_VIEW_GOTO_ANOTHER_VIEW, !isInaccessible);
 			_tabPopupMenu.enableItem(IDM_VIEW_CLONE_TO_ANOTHER_VIEW, !isInaccessible);
 			_tabPopupMenu.enableItem(IDM_VIEW_GOTO_NEW_INSTANCE, !isInaccessible && !isDirty && !isUntitled);
@@ -1229,7 +1248,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				pt.x = lpnm->rc.left;
 				pt.y = lpnm->rc.bottom;
 				ClientToScreen(notifRebar->getHSelf(), &pt);
-				_toolBar.doPopop(pt);
+				_toolBar.doPopup(pt);
 				return TRUE;
 			}
 

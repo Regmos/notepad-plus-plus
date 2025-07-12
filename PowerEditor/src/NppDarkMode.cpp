@@ -80,8 +80,13 @@ static std::wstring getWndClassName(HWND hWnd)
 {
 	constexpr int strLen = 32;
 	std::wstring className(strLen, 0);
-	className.resize(::GetClassName(hWnd, &className[0], strLen));
+	className.resize(::GetClassName(hWnd, className.data(), strLen));
 	return className;
+}
+
+static bool cmpWndClassName(HWND hWnd, const wchar_t* classNameToCmp)
+{
+	return (getWndClassName(hWnd) == classNameToCmp);
 }
 
 namespace NppDarkMode
@@ -620,7 +625,7 @@ namespace NppDarkMode
 	{
 		NppDarkMode::setToolbarFluentMonochrome(setMonochrome, NppDarkMode::isEnabled());
 	}
-	
+
 	void setToolbarFluentCustomColor(COLORREF color, bool useDark)
 	{
 		if (useDark)
@@ -638,7 +643,7 @@ namespace NppDarkMode
 	{
 		if (useDark)
 			g_advOptions._darkDefaults._tabIconSet = useAltIcons ? 1 : 2;
-		else	
+		else
 			g_advOptions._lightDefaults._tabIconSet = useAltIcons ? 1 : 0;
 	}
 
@@ -1153,17 +1158,17 @@ namespace NppDarkMode
 		NppDarkMode::paintRoundRect(hdc, rect, hpen, static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)), width, height);
 	}
 
+	constexpr int g_win11CornerRoundness = 4;
+
 	struct ThemeData
 	{
 		HTHEME _hTheme = nullptr;
-		const wchar_t* _themeClass;
+		const wchar_t* _themeClass = nullptr;
+
+		ThemeData() = default;
 
 		ThemeData(const wchar_t* themeClass)
 			: _themeClass(themeClass)
-		{}
-
-		ThemeData()
-			: _themeClass(nullptr)
 		{}
 
 		~ThemeData()
@@ -1756,102 +1761,98 @@ namespace NppDarkMode
 		SetWindowSubclass(hwnd, GroupboxSubclass, g_groupboxSubclassID, pButtonData);
 	}
 
-	constexpr UINT_PTR g_tabSubclassID = 42;
-
-	static LRESULT CALLBACK TabSubclass(
-		HWND hWnd,
-		UINT uMsg,
-		WPARAM wParam,
-		LPARAM lParam,
-		UINT_PTR uIdSubclass,
-		DWORD_PTR /*dwRefData*/
-	)
+	static void paintTab(HWND hWnd, HDC hdc, const RECT& rect)
 	{
-		switch (uMsg)
+		::FillRect(hdc, &rect, NppDarkMode::getDlgBackgroundBrush());
+
+		auto holdPen = static_cast<HPEN>(::SelectObject(hdc, NppDarkMode::getEdgePen()));
+
+		auto holdClip = ::CreateRectRgn(0, 0, 0, 0);
+		if (::GetClipRgn(hdc, holdClip) != 1)
 		{
-			case WM_ERASEBKGND:
+			::DeleteObject(holdClip);
+			holdClip = nullptr;
+		}
+
+		auto hFont = reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0));
+		auto holdFont = ::SelectObject(hdc, hFont);
+
+		POINT ptCursor{};
+		::GetCursorPos(&ptCursor);
+		::ScreenToClient(hWnd, &ptCursor);
+
+		bool hasFocusRect = false;
+		if (::GetFocus() == hWnd)
+		{
+			const auto uiState = static_cast<DWORD>(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
+			hasFocusRect = ((uiState & UISF_HIDEFOCUS) != UISF_HIDEFOCUS);
+		}
+
+		const int iSelTab = TabCtrl_GetCurSel(hWnd);
+		const int nTabs = TabCtrl_GetItemCount(hWnd);
+		for (int i = 0; i < nTabs; ++i)
+		{
+			RECT rcItem{};
+			TabCtrl_GetItemRect(hWnd, i, &rcItem);
+			RECT rcFrame{ rcItem };
+
+			RECT rcIntersect{};
+			if (::IntersectRect(&rcIntersect, &rect, &rcItem) == TRUE)
 			{
-				if (NppDarkMode::isEnabled())
+				const bool isHot = ::PtInRect(&rcItem, ptCursor) == TRUE;
+				const bool isSelectedTab = (i == iSelTab);
+
+				::SetBkMode(hdc, TRANSPARENT);
+
+				HRGN hClip = ::CreateRectRgnIndirect(&rcItem);
+				::SelectClipRgn(hdc, hClip);
+
+				::InflateRect(&rcItem, -1, -1);
+				rcItem.right += 1;
+
+				std::wstring label(MAX_PATH, L'\0');
+				TCITEM tci{};
+				tci.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_STATE;
+				tci.dwStateMask = TCIS_HIGHLIGHTED;
+				tci.pszText = label.data();
+				tci.cchTextMax = MAX_PATH - 1;
+
+				TabCtrl_GetItem(hWnd, i, &tci);
+
+				const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+				const bool isBtn = (nStyle & TCS_BUTTONS) == TCS_BUTTONS;
+				if (isBtn)
 				{
-					return TRUE;
+					const bool isHighlighted = (tci.dwState & TCIS_HIGHLIGHTED) == TCIS_HIGHLIGHTED;
+					::FillRect(hdc, &rcItem, isHighlighted ? NppDarkMode::getHotBackgroundBrush() : NppDarkMode::getDlgBackgroundBrush());
+					::SetTextColor(hdc, isHighlighted ? NppDarkMode::getLinkTextColor() : NppDarkMode::getDarkerTextColor());
 				}
-				break;
-			}
-
-		case WM_PAINT:
-		{
-			if (!NppDarkMode::isEnabled())
-			{
-				break;
-			}
-
-			LONG_PTR dwStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
-			if ((dwStyle & TCS_BUTTONS) || (dwStyle & TCS_VERTICAL))
-			{
-				break;
-			}
-
-			PAINTSTRUCT ps{};
-			HDC hdc = ::BeginPaint(hWnd, &ps);
-			::FillRect(hdc, &ps.rcPaint, NppDarkMode::getDlgBackgroundBrush());
-
-			auto holdPen = static_cast<HPEN>(::SelectObject(hdc, NppDarkMode::getEdgePen()));
-
-			HRGN holdClip = CreateRectRgn(0, 0, 0, 0);
-			if (1 != GetClipRgn(hdc, holdClip))
-			{
-				DeleteObject(holdClip);
-				holdClip = nullptr;
-			}
-
-			HFONT hFont = reinterpret_cast<HFONT>(SendMessage(hWnd, WM_GETFONT, 0, 0));
-			auto hOldFont = SelectObject(hdc, hFont);
-
-			POINT ptCursor{};
-			::GetCursorPos(&ptCursor);
-			ScreenToClient(hWnd, &ptCursor);
-
-			int nTabs = TabCtrl_GetItemCount(hWnd);
-
-			int nSelTab = TabCtrl_GetCurSel(hWnd);
-			for (int i = 0; i < nTabs; ++i)
-			{
-				RECT rcItem{};
-				TabCtrl_GetItemRect(hWnd, i, &rcItem);
-				RECT rcFrame = rcItem;
-
-				RECT rcIntersect{};
-				if (IntersectRect(&rcIntersect, &ps.rcPaint, &rcItem))
+				else
 				{
-					bool bHot = PtInRect(&rcItem, ptCursor);
-					bool isSelectedTab = (i == nSelTab);
-
-					HRGN hClip = CreateRectRgnIndirect(&rcItem);
-
-					SelectClipRgn(hdc, hClip);
-
-					SetTextColor(hdc, (bHot || isSelectedTab ) ? NppDarkMode::getTextColor() : NppDarkMode::getDarkerTextColor());
-
-					::InflateRect(&rcItem, -1, -1);
-					rcItem.right += 1;
-
-					// for consistency getBackgroundBrush() 
+					// for consistency getBackgroundBrush()
 					// would be better, than getCtrlBackgroundBrush(),
 					// however default getBackgroundBrush() has same color
 					// as getDlgBackgroundBrush()
-					::FillRect(hdc, &rcItem, isSelectedTab ? NppDarkMode::getDlgBackgroundBrush() : bHot ? NppDarkMode::getHotBackgroundBrush() : NppDarkMode::getCtrlBackgroundBrush());
+					auto getBrush = [&]() -> HBRUSH {
+						if (isSelectedTab)
+						{
+							return NppDarkMode::getDlgBackgroundBrush();
+						}
 
-					SetBkMode(hdc, TRANSPARENT);
+						if (isHot)
+						{
+							return NppDarkMode::getHotBackgroundBrush();
+						}
+						return NppDarkMode::getCtrlBackgroundBrush();
+						};
 
-					wchar_t label[MAX_PATH]{};
-					TCITEM tci{};
-					tci.mask = TCIF_TEXT;
-					tci.pszText = label;
-					tci.cchTextMax = MAX_PATH - 1;
+					::FillRect(hdc, &rcItem, getBrush());
+					::SetTextColor(hdc, (isHot || isSelectedTab) ? NppDarkMode::getTextColor() : NppDarkMode::getDarkerTextColor());
+				}
 
-					::SendMessage(hWnd, TCM_GETITEM, i, reinterpret_cast<LPARAM>(&tci));
-
-					RECT rcText = rcItem;
+				RECT rcText{ rcItem };
+				if (!isBtn)
+				{
 					if (isSelectedTab)
 					{
 						::OffsetRect(&rcText, 0, -1);
@@ -1862,62 +1863,184 @@ namespace NppDarkMode
 					{
 						rcFrame.right += 1;
 					}
-
-					::FrameRect(hdc, &rcFrame, NppDarkMode::getEdgeBrush());
-
-					DrawText(hdc, label, -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-					DeleteObject(hClip);
-
-					SelectClipRgn(hdc, holdClip);
 				}
-			}
 
-			SelectObject(hdc, hOldFont);
-
-			SelectClipRgn(hdc, holdClip);
-			if (holdClip)
-			{
-				DeleteObject(holdClip);
-				holdClip = nullptr;
-			}
-
-			SelectObject(hdc, holdPen);
-
-			EndPaint(hWnd, &ps);
-			return 0;
-		}
-
-		case WM_NCDESTROY:
-		{
-			::RemoveWindowSubclass(hWnd, TabSubclass, uIdSubclass);
-			break;
-		}
-
-		case WM_PARENTNOTIFY:
-		{
-			switch (LOWORD(wParam))
-			{
-				case WM_CREATE:
+				if (tci.iImage != -1)
 				{
-					auto hwndUpdown = reinterpret_cast<HWND>(lParam);
-					if (NppDarkMode::subclassTabUpDownControl(hwndUpdown))
+					int cx = 0;
+					int cy = 0;
+					auto hImagelist = TabCtrl_GetImageList(hWnd);
+					static constexpr int offset = 2;
+					::ImageList_GetIconSize(hImagelist, &cx, &cy);
+					::ImageList_Draw(hImagelist, tci.iImage, hdc, rcText.left + offset, rcText.top + (((rcText.bottom - rcText.top) - cy) / 2), ILD_NORMAL);
+					rcText.left += cx;
+				}
+
+				::DrawText(hdc, label.c_str(), -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+				::FrameRect(hdc, &rcFrame, NppDarkMode::getEdgeBrush());
+
+				if (isSelectedTab && hasFocusRect)
+				{
+					::InflateRect(&rcFrame, -2, -1);
+					::DrawFocusRect(hdc, &rcFrame);
+				}
+
+				::SelectClipRgn(hdc, holdClip);
+				::DeleteObject(hClip);
+			}
+		}
+
+		::SelectObject(hdc, holdFont);
+		::SelectClipRgn(hdc, holdClip);
+		if (holdClip != nullptr)
+		{
+			::DeleteObject(holdClip);
+			holdClip = nullptr;
+		}
+		::SelectObject(hdc, holdPen);
+	}
+
+	static constexpr UINT_PTR g_tabSubclassID = 42;
+
+	static LRESULT CALLBACK TabSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto* pTabBufferData = reinterpret_cast<BufferData*>(dwRefData);
+		const auto& hMemDC = pTabBufferData->_hMemDC;
+
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, TabSubclass, uIdSubclass);
+				delete pTabBufferData;
+				break;
+			}
+
+			case WM_ERASEBKGND:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
+				if (hdc != hMemDC)
+				{
+					return FALSE;
+				}
+				return TRUE;
+			}
+
+			case WM_PAINT:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+				if ((nStyle & TCS_VERTICAL) == TCS_VERTICAL)
+				{
+					break;
+				}
+
+				PAINTSTRUCT ps{};
+				HDC hdc = ::BeginPaint(hWnd, &ps);
+
+				if (ps.rcPaint.right <= ps.rcPaint.left || ps.rcPaint.bottom <= ps.rcPaint.top)
+				{
+					::EndPaint(hWnd, &ps);
+					return 0;
+				}
+
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+
+				if (pTabBufferData->ensureBuffer(hdc, rcClient))
+				{
+					const int savedState = ::SaveDC(hMemDC);
+					::IntersectClipRect(
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom
+					);
+
+					NppDarkMode::paintTab(hWnd, hMemDC, rcClient);
+
+					::RestoreDC(hMemDC, savedState);
+
+					::BitBlt(
+						hdc,
+						ps.rcPaint.left, ps.rcPaint.top,
+						ps.rcPaint.right - ps.rcPaint.left,
+						ps.rcPaint.bottom - ps.rcPaint.top,
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top,
+						SRCCOPY
+					);
+				}
+
+				::EndPaint(hWnd, &ps);
+				return 0;
+			}
+
+			case WM_UPDATEUISTATE:
+			{
+				if ((HIWORD(wParam) & (UISF_HIDEACCEL | UISF_HIDEFOCUS)) != 0)
+				{
+					::InvalidateRect(hWnd, nullptr, FALSE);
+				}
+				break;
+			}
+
+			case WM_PARENTNOTIFY:
+			{
+				if (LOWORD(wParam) == WM_CREATE)
+				{
+					auto hUpDown = reinterpret_cast<HWND>(lParam);
+					if (NppDarkMode::subclassTabUpDownControl(hUpDown))
 					{
 						return 0;
 					}
-					break;
 				}
+				break;
 			}
-			return 0;
-		}
 
+			default:
+			{
+				break;
+			}
 		}
-		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassTabControl(HWND hwnd)
+	void subclassTabControl(HWND hWnd)
 	{
-		SetWindowSubclass(hwnd, TabSubclass, g_tabSubclassID, 0);
+		if (::GetWindowSubclass(hWnd, TabSubclass, g_tabSubclassID, nullptr) == FALSE)
+		{
+			auto pTabBufferData = reinterpret_cast<DWORD_PTR>(new BufferData());
+			::SetWindowSubclass(hWnd, TabSubclass, g_tabSubclassID, pTabBufferData);
+		}
+	}
+
+	static void setTabCtrlSubclassAndTheme(HWND hWnd, NppDarkModeParams p)
+	{
+		if (p._theme)
+		{
+			NppDarkMode::setDarkTooltips(hWnd, ToolTipsType::tabbar);
+		}
+
+		if (p._subclass)
+		{
+			NppDarkMode::subclassTabControl(hWnd);
+		}
 	}
 
 	struct BorderMetricsData
@@ -2014,7 +2137,6 @@ namespace NppDarkMode
 
 				return 0;
 			}
-			break;
 
 			case WM_NCCALCSIZE:
 			{
@@ -2026,22 +2148,8 @@ namespace NppDarkMode
 				auto lpRect = reinterpret_cast<LPRECT>(lParam);
 				::InflateRect(lpRect, -(pBorderMetricsData->_xEdge), -(pBorderMetricsData->_yEdge));
 
-				auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				bool hasVerScrollbar = (style & WS_VSCROLL) == WS_VSCROLL;
-				if (hasVerScrollbar)
-				{
-					lpRect->right -= pBorderMetricsData->_xScroll;
-				}
-
-				bool hasHorScrollbar = (style & WS_HSCROLL) == WS_HSCROLL;
-				if (hasHorScrollbar)
-				{
-					lpRect->bottom -= pBorderMetricsData->_yScroll;
-				}
-
-				return 0;
+				break;
 			}
-			break;
 
 			case WM_DPICHANGED:
 			case WM_DPICHANGED_AFTERPARENT:
@@ -2265,7 +2373,7 @@ namespace NppDarkMode
 			::FillRect(hdc, &rcInner, isDisabled ? NppDarkMode::getDlgBackgroundBrush() : NppDarkMode::getCtrlBackgroundBrush());
 		}
 
-		const int roundCornerValue = NppDarkMode::isWindows11() ? 4 : 0;
+		const int roundCornerValue = NppDarkMode::isWindows11() ? g_win11CornerRoundness : 0;
 
 		NppDarkMode::paintRoundFrameRect(hdc, rcClient, hSelectedPen, roundCornerValue, roundCornerValue);
 
@@ -2464,6 +2572,357 @@ namespace NppDarkMode
 		SetWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID, 0);
 	}
 
+	struct ProgressBarData
+	{
+		ThemeData _themeData{ VSCLASS_PROGRESS };
+		BufferData _bufferData;
+
+		int _iStateID = PBFS_NORMAL; // PBFS_PARTIAL for cyan color
+	};
+
+	static void getProgressBarRects(HWND hWnd, RECT* rcEmpty, RECT* rcFilled)
+	{
+		const auto pos = static_cast<int>(::SendMessage(hWnd, PBM_GETPOS, 0, 0));
+
+		PBRANGE range{};
+		::SendMessage(hWnd, PBM_GETRANGE, TRUE, reinterpret_cast<LPARAM>(&range));
+		const int iMin = range.iLow;
+
+		const int currPos = pos - iMin;
+		if (currPos != 0)
+		{
+			const int totalWidth = rcEmpty->right - rcEmpty->left;
+			rcFilled->left = rcEmpty->left;
+			rcFilled->top = rcEmpty->top;
+			rcFilled->bottom = rcEmpty->bottom;
+			rcFilled->right = rcEmpty->left + static_cast<int>(static_cast<double>(currPos) / (range.iHigh - iMin) * totalWidth);
+
+			rcEmpty->left = rcFilled->right; // to avoid painting under filled part
+		}
+	}
+
+	static void paintProgressBar(HWND hWnd, HDC hdc, const ProgressBarData& progressBarData)
+	{
+		const auto& hTheme = progressBarData._themeData._hTheme;
+
+		RECT rcClient{};
+		::GetClientRect(hWnd, &rcClient);
+
+		NppDarkMode::paintRoundFrameRect(hdc, rcClient, NppDarkMode::getEdgePen(), 0, 0);
+
+		::InflateRect(&rcClient, -1, -1);
+		rcClient.left = 1;
+
+		RECT rcFill{};
+		NppDarkMode::getProgressBarRects(hWnd, &rcClient, &rcFill);
+		::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData._iStateID, &rcFill, nullptr);
+		::FillRect(hdc, &rcClient, NppDarkMode::getCtrlBackgroundBrush());
+	}
+
+	static constexpr UINT_PTR g_progressBarSubclassID = 42;
+
+	static LRESULT CALLBACK ProgressBarSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto* pProgressBarData = reinterpret_cast<ProgressBarData*>(dwRefData);
+		auto& themeData = pProgressBarData->_themeData;
+		auto& bufferData = pProgressBarData->_bufferData;
+		const auto& hMemDC = bufferData._hMemDC;
+
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, ProgressBarSubclass, uIdSubclass);
+				delete pProgressBarData;
+				break;
+			}
+
+			case WM_ERASEBKGND:
+			{
+				if (!NppDarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+				{
+					break;
+				}
+
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
+				if (hdc != hMemDC)
+				{
+					return FALSE;
+				}
+				return TRUE;
+			}
+
+			case WM_PAINT:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				PAINTSTRUCT ps{};
+				HDC hdc = ::BeginPaint(hWnd, &ps);
+
+				if (ps.rcPaint.right <= ps.rcPaint.left || ps.rcPaint.bottom <= ps.rcPaint.top)
+				{
+					::EndPaint(hWnd, &ps);
+					return 0;
+				}
+
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+
+				if (bufferData.ensureBuffer(hdc, rcClient))
+				{
+					const int savedState = ::SaveDC(hMemDC);
+					::IntersectClipRect(
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom
+					);
+
+					NppDarkMode::paintProgressBar(hWnd, hMemDC, *pProgressBarData);
+
+					::RestoreDC(hMemDC, savedState);
+
+					::BitBlt(
+						hdc,
+						ps.rcPaint.left, ps.rcPaint.top,
+						ps.rcPaint.right - ps.rcPaint.left,
+						ps.rcPaint.bottom - ps.rcPaint.top,
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top,
+						SRCCOPY
+					);
+				}
+
+				::EndPaint(hWnd, &ps);
+				return 0;
+			}
+
+			case WM_DPICHANGED:
+			case WM_DPICHANGED_AFTERPARENT:
+			{
+				themeData.closeTheme();
+				return 0;
+			}
+
+			case WM_THEMECHANGED:
+			{
+				themeData.closeTheme();
+				break;
+			}
+
+			case PBM_SETSTATE:
+			{
+				switch (wParam)
+				{
+					case PBST_NORMAL:
+					{
+						pProgressBarData->_iStateID = PBFS_NORMAL; // green
+						break;
+					}
+
+					case PBST_ERROR:
+					{
+						pProgressBarData->_iStateID = PBFS_ERROR; // red
+						break;
+					}
+
+					case PBST_PAUSED:
+					{
+						pProgressBarData->_iStateID = PBFS_PAUSED; // yellow
+						break;
+					}
+
+					default:
+					{
+						break;
+					}
+				}
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	static void subclassProgressBar(HWND hWnd)
+	{
+		if (::GetWindowSubclass(hWnd, ProgressBarSubclass, g_progressBarSubclassID, nullptr) == FALSE)
+		{
+			auto pProgressBarData = reinterpret_cast<DWORD_PTR>(new ProgressBarData());
+			::SetWindowSubclass(hWnd, ProgressBarSubclass, g_progressBarSubclassID, pProgressBarData);
+		}
+	}
+
+	static void setProgressBarClassicTheme(HWND hWnd)
+	{
+		auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		const bool hasFlag = (nStyle & WS_DLGFRAME) == WS_DLGFRAME;
+
+		if (NppDarkMode::isEnabled() != hasFlag)
+		{
+			nStyle ^= WS_DLGFRAME;
+			::SetWindowLongPtr(hWnd, GWL_STYLE, nStyle);
+		}
+
+		NppDarkMode::disableVisualStyle(hWnd, NppDarkMode::isEnabled());
+		if (NppDarkMode::isEnabled())
+		{
+			::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(NppDarkMode::getBackgroundColor()));
+			static constexpr COLORREF greenFill = HEXRGB(0x06B025);
+			::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(greenFill));
+		}
+	}
+
+	static void subclassAndThemeProgressBar(HWND hWnd, NppDarkModeParams p)
+	{
+		if (p._theme)
+		{
+			if (p._subclass)
+			{
+				NppDarkMode::subclassProgressBar(hWnd);
+			}
+		}
+		else
+		{
+			NppDarkMode::setProgressBarClassicTheme(hWnd);
+		}
+	}
+
+	struct UpDownData
+	{
+		BufferData _bufferData;
+
+		RECT _rcClient{};
+		RECT _rcPrev{};
+		RECT _rcNext{};
+		int _cornerRoundness = 0;
+		bool _isHorizontal = false;
+		bool _isAligned = false;
+		bool _wasHotNext = false;
+
+		UpDownData() = delete;
+
+		explicit UpDownData(HWND hWnd)
+			: _isHorizontal((::GetWindowLongPtr(hWnd, GWL_STYLE) & UDS_HORZ) == UDS_HORZ)
+			, _isAligned((::GetWindowLongPtr(hWnd, GWL_STYLE) & UDS_ALIGNRIGHT) == UDS_ALIGNRIGHT)
+		{
+			_cornerRoundness = (NppDarkMode::isWindows11() && cmpWndClassName(::GetParent(hWnd), WC_TABCONTROL)) ? (g_win11CornerRoundness + 1) : 0;
+			updateRect(hWnd);
+		}
+
+		~UpDownData() = default;
+
+		void updateRectUpDown()
+		{
+			if (_isHorizontal)
+			{
+				RECT rcArrowLeft{
+					_rcClient.left, _rcClient.top,
+					_rcClient.right - ((_rcClient.right - _rcClient.left) / 2) - 1, _rcClient.bottom
+				};
+
+				RECT rcArrowRight{
+					rcArrowLeft.right + 1, _rcClient.top,
+					_rcClient.right, _rcClient.bottom
+				};
+
+				_rcPrev = rcArrowLeft;
+				_rcNext = rcArrowRight;
+			}
+			else
+			{
+				static const LONG offset = _isAligned ? 2 : 0;
+
+				RECT rcArrowTop{
+					_rcClient.left + offset, _rcClient.top,
+					_rcClient.right, _rcClient.bottom - ((_rcClient.bottom - _rcClient.top) / 2)
+				};
+
+				RECT rcArrowBottom{
+					_rcClient.left + offset, rcArrowTop.bottom,
+					_rcClient.right, _rcClient.bottom
+				};
+
+				_rcPrev = rcArrowTop;
+				_rcNext = rcArrowBottom;
+			}
+		}
+
+		void updateRect(HWND hWnd)
+		{
+			::GetClientRect(hWnd, &_rcClient);
+			updateRectUpDown();
+		}
+
+		bool updateRect(RECT rcClientNew)
+		{
+			if (::EqualRect(&_rcClient, &rcClientNew) == FALSE)
+			{
+				_rcClient = rcClientNew;
+				updateRectUpDown();
+				return true;
+			}
+			return false;
+		}
+	};
+
+	static void paintUpDown(HWND hWnd, HDC hdc, UpDownData& upDownData)
+	{
+		const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
+		const int roundness = upDownData._cornerRoundness;
+
+		::FillRect(hdc, &upDownData._rcClient, NppDarkMode::getDlgBackgroundBrush());
+		::SetBkMode(hdc, TRANSPARENT);
+
+		POINT ptCursor{};
+		::GetCursorPos(&ptCursor);
+		::ScreenToClient(hWnd, &ptCursor);
+
+		const bool isHotPrev = ::PtInRect(&upDownData._rcPrev, ptCursor) == TRUE;
+		const bool isHotNext = ::PtInRect(&upDownData._rcNext, ptCursor) == TRUE;
+
+		upDownData._wasHotNext = !isHotPrev && (::PtInRect(&upDownData._rcClient, ptCursor) == TRUE);
+
+		auto paintUpDownBtn = [&](const RECT& rect, bool isHot) -> void {
+			HBRUSH hBrush = isDisabled ? NppDarkMode::getDlgBackgroundBrush() : (isHot ? NppDarkMode::getHotBackgroundBrush() : NppDarkMode::getCtrlBackgroundBrush());
+			HPEN hPen = isDisabled ? NppDarkMode::getDisabledEdgePen() : (isHot ? NppDarkMode::getHotEdgePen() : NppDarkMode::getEdgePen());
+
+			NppDarkMode::paintRoundRect(hdc, rect, hPen, hBrush, roundness, roundness);
+			};
+
+		paintUpDownBtn(upDownData._rcPrev, isHotPrev);
+		paintUpDownBtn(upDownData._rcNext, isHotNext);
+
+		auto hFont = reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0));
+		auto holdFont = static_cast<HFONT>(::SelectObject(hdc, hFont));
+
+		constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+		const COLORREF clrText = isDisabled ? NppDarkMode::getDisabledTextColor() : NppDarkMode::getDarkerTextColor();
+
+		const LONG offset = upDownData._isHorizontal ? DPIManagerV2::scale(1, ::GetParent(hWnd)) : 0;
+		RECT rcTectPrev{ upDownData._rcPrev.left, upDownData._rcPrev.top, upDownData._rcPrev.right, upDownData._rcPrev.bottom - offset };
+		::SetTextColor(hdc, isHotPrev ? NppDarkMode::getTextColor() : clrText);
+		::DrawText(hdc, upDownData._isHorizontal ? L"<" : L"˄", -1, &rcTectPrev, dtFlags);
+
+		RECT rcTectNext{ upDownData._rcNext.left + offset, upDownData._rcNext.top, upDownData._rcNext.right, upDownData._rcNext.bottom - offset };
+		::SetTextColor(hdc, isHotNext ? NppDarkMode::getTextColor() : clrText);
+		::DrawText(hdc, upDownData._isHorizontal ? L">" : L"˅", -1, &rcTectNext, dtFlags);
+
+		::SelectObject(hdc, holdFont);
+	}
+
 	constexpr UINT_PTR g_upDownSubclassID = 42;
 
 	static LRESULT CALLBACK UpDownSubclass(
@@ -2475,120 +2934,16 @@ namespace NppDarkMode
 		DWORD_PTR dwRefData
 	)
 	{
-		auto pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
+		auto* pUpDownData = reinterpret_cast<UpDownData*>(dwRefData);
+		auto& bufferData = pUpDownData->_bufferData;
+		auto& hMemDC = bufferData._hMemDC;
 
 		switch (uMsg)
 		{
-			case WM_PRINTCLIENT:
-			case WM_PAINT:
-			{
-				if (!NppDarkMode::isEnabled())
-				{
-					break;
-				}
-
-				const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				const bool isHorizontal = ((style & UDS_HORZ) == UDS_HORZ);
-
-				bool hasTheme = pButtonData->ensureTheme(hWnd);
-
-				RECT rcClient{};
-				::GetClientRect(hWnd, &rcClient);
-
-				PAINTSTRUCT ps{};
-				auto hdc = ::BeginPaint(hWnd, &ps);
-
-				::FillRect(hdc, &rcClient, NppDarkMode::getDlgBackgroundBrush());
-
-				RECT rcArrowPrev{};
-				RECT rcArrowNext{};
-
-				if (isHorizontal)
-				{
-					RECT rcArrowLeft{
-						rcClient.left, rcClient.top,
-						rcClient.right - ((rcClient.right - rcClient.left) / 2), rcClient.bottom
-					};
-
-					RECT rcArrowRight{
-						rcArrowLeft.right - 1, rcClient.top,
-						rcClient.right, rcClient.bottom
-					};
-
-					rcArrowPrev = rcArrowLeft;
-					rcArrowNext = rcArrowRight;
-				}
-				else
-				{
-					RECT rcArrowTop{
-						rcClient.left, rcClient.top,
-						rcClient.right, rcClient.bottom - ((rcClient.bottom - rcClient.top) / 2)
-					};
-
-					RECT rcArrowBottom{
-						rcClient.left, rcArrowTop.bottom - 1,
-						rcClient.right, rcClient.bottom
-					};
-
-					rcArrowPrev = rcArrowTop;
-					rcArrowNext = rcArrowBottom;
-				}
-
-				POINT ptCursor{};
-				::GetCursorPos(&ptCursor);
-				::ScreenToClient(hWnd, &ptCursor);
-
-				bool isHotPrev = ::PtInRect(&rcArrowPrev, ptCursor);
-				bool isHotNext = ::PtInRect(&rcArrowNext, ptCursor);
-
-				::SetBkMode(hdc, TRANSPARENT);
-
-				if (hasTheme)
-				{
-					::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotPrev ? PBS_HOT : PBS_NORMAL, &rcArrowPrev, nullptr);
-					::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotNext ? PBS_HOT : PBS_NORMAL, &rcArrowNext, nullptr);
-				}
-				else
-				{
-					::FillRect(hdc, &rcArrowPrev, isHotPrev ? NppDarkMode::getHotBackgroundBrush() : NppDarkMode::getBackgroundBrush());
-					::FillRect(hdc, &rcArrowNext, isHotNext ? NppDarkMode::getHotBackgroundBrush() : NppDarkMode::getBackgroundBrush());
-				}
-
-				const auto arrowTextFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
-
-				::SetTextColor(hdc, isHotPrev ? NppDarkMode::getTextColor() : NppDarkMode::getDarkerTextColor());
-				::DrawText(hdc, isHorizontal ? L"<" : L"˄", -1, &rcArrowPrev, arrowTextFlags);
-
-				::SetTextColor(hdc, isHotNext ? NppDarkMode::getTextColor() : NppDarkMode::getDarkerTextColor());
-				::DrawText(hdc, isHorizontal ? L">" : L"˅", -1, &rcArrowNext, arrowTextFlags);
-
-				if (!hasTheme)
-				{
-					NppDarkMode::paintRoundFrameRect(hdc, rcArrowPrev, NppDarkMode::getEdgePen());
-					NppDarkMode::paintRoundFrameRect(hdc, rcArrowNext, NppDarkMode::getEdgePen());
-				}
-
-				::EndPaint(hWnd, &ps);
-				return FALSE;
-			}
-
-			case WM_DPICHANGED:
-			case WM_DPICHANGED_AFTERPARENT:
-			{
-				pButtonData->closeTheme();
-				return 0;
-			}
-
-			case WM_THEMECHANGED:
-			{
-				pButtonData->closeTheme();
-				break;
-			}
-
 			case WM_NCDESTROY:
 			{
 				::RemoveWindowSubclass(hWnd, UpDownSubclass, uIdSubclass);
-				delete pButtonData;
+				delete pUpDownData;
 				break;
 			}
 
@@ -2596,45 +2951,149 @@ namespace NppDarkMode
 			{
 				if (NppDarkMode::isEnabled())
 				{
-					RECT rcClient{};
-					::GetClientRect(hWnd, &rcClient);
-					::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, NppDarkMode::getDlgBackgroundBrush());
+					auto hdc = reinterpret_cast<HDC>(wParam);
+					if (hdc != hMemDC)
+					{
+						return FALSE;
+					}
 					return TRUE;
 				}
 				break;
 			}
+
+			case WM_PAINT:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				PAINTSTRUCT ps{};
+				HDC hdc = ::BeginPaint(hWnd, &ps);
+
+				if (ps.rcPaint.right <= ps.rcPaint.left || ps.rcPaint.bottom <= ps.rcPaint.top)
+				{
+					::EndPaint(hWnd, &ps);
+					return 0;
+				}
+
+				if (!pUpDownData->_isHorizontal && pUpDownData->_isAligned)
+				{
+					::OffsetRect(&ps.rcPaint, 2, 0);
+				}
+
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+				pUpDownData->updateRect(rcClient);
+				if (!pUpDownData->_isHorizontal && pUpDownData->_isAligned)
+				{
+					::OffsetRect(&rcClient, 2, 0);
+				}
+
+				if (bufferData.ensureBuffer(hdc, rcClient))
+				{
+					int savedState = ::SaveDC(hMemDC);
+					::IntersectClipRect(
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom
+					);
+
+					NppDarkMode::paintUpDown(hWnd, hMemDC, *pUpDownData);
+
+					::RestoreDC(hMemDC, savedState);
+
+					::BitBlt(
+						hdc,
+						ps.rcPaint.left, ps.rcPaint.top,
+						ps.rcPaint.right - ps.rcPaint.left,
+						ps.rcPaint.bottom - ps.rcPaint.top,
+						hMemDC,
+						ps.rcPaint.left, ps.rcPaint.top,
+						SRCCOPY
+					);
+				}
+
+				::EndPaint(hWnd, &ps);
+				return 0;
+			}
+
+			case WM_DPICHANGED:
+			case WM_DPICHANGED_AFTERPARENT:
+			{
+				pUpDownData->updateRect(hWnd);
+				return 0;
+			}
+
+			case WM_MOUSEMOVE:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				if (pUpDownData->_wasHotNext)
+				{
+					pUpDownData->_wasHotNext = false;
+					::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+				}
+
+				break;
+			}
+
+			case WM_MOUSELEAVE:
+			{
+				if (!NppDarkMode::isEnabled())
+				{
+					break;
+				}
+
+				pUpDownData->_wasHotNext = false;
+				::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+
+				break;
+			}
 		}
-		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassAndThemeUpDownControl(HWND hwnd, NppDarkModeParams p)
+	bool subclassTabUpDownControl(HWND hWnd)
+	{
+		if (cmpWndClassName(hWnd, UPDOWN_CLASS))
+		{
+			if (::GetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
+			{
+				auto pUpdownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hWnd));
+				::SetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, pUpdownData);
+				NppDarkMode::setDarkExplorerTheme(hWnd);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static void subclassAndThemeUpDownControl(HWND hWnd, NppDarkModeParams p)
 	{
 		if (p._subclass)
 		{
-			auto pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData());
-			SetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, pButtonData);
+			NppDarkMode::subclassTabUpDownControl(hWnd);
 		}
-
-		if (p._theme)
+		else if (p._theme)
 		{
-			SetWindowTheme(hwnd, p._themeClassName, nullptr);
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 		}
 	}
 
-	bool subclassTabUpDownControl(HWND hwnd)
+	static void setUrlLinkControlColor(HWND hWnd, NppDarkModeParams p)
 	{
-		constexpr size_t classNameLen = 16;
-		wchar_t className[classNameLen]{};
-		GetClassName(hwnd, className, classNameLen);
-		if (wcscmp(className, UPDOWN_CLASS) == 0)
+		if (p._theme)
 		{
-			auto pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData());
-			SetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, pButtonData);
-			NppDarkMode::setDarkExplorerTheme(hwnd);
-			return true;
+			LITEM item{};
+			item.iLink = 0; // for now colorize only 1st item
+			item.mask = LIF_ITEMINDEX | LIF_STATE;
+			item.state = NppDarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0;
+			item.stateMask = LIS_DEFAULTCOLORS;
+			::SendMessage(hWnd, LM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
 		}
-
-		return false;
 	}
 
 	void autoSubclassAndThemeChildControls(HWND hwndParent, bool subclass, bool theme)
@@ -2701,6 +3160,18 @@ namespace NppDarkMode
 				return TRUE;
 			}
 
+			if (wcscmp(className, WC_TABCONTROL) == 0)
+			{
+				NppDarkMode::setTabCtrlSubclassAndTheme(hwnd, p);
+				return TRUE;
+			}
+
+			if (wcscmp(className, PROGRESS_CLASS) == 0)
+			{
+				NppDarkMode::subclassAndThemeProgressBar(hwnd, p);
+				return TRUE;
+			}
+
 			// Plugin might use rich edit control version 2.0 and later
 			if (wcscmp(className, L"RichEdit20W") == 0 || wcscmp(className, L"RICHEDIT50W") == 0)
 			{
@@ -2715,8 +3186,15 @@ namespace NppDarkMode
 				return TRUE;
 			}
 
+			// For plugins: Prep SysLink so that colors can be set later in WM_CTLCOLORSTATIC
+			if (wcscmp(className, WC_LINK) == 0)
+			{
+				NppDarkMode::setUrlLinkControlColor(hwnd, p);
+				return TRUE;
+			}
+
 			/*
-			// for debugging 
+			// for debugging
 			if (wcscmp(className, L"#32770") == 0)
 			{
 				return TRUE;
@@ -2952,7 +3430,7 @@ namespace NppDarkMode
 				{
 					if (NppDarkMode::isWindows11())
 					{
-						roundCornerValue = 5;
+						roundCornerValue = g_win11CornerRoundness + 1;
 					}
 
 					::FillRect(nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, NppDarkMode::getDlgBackgroundBrush());
@@ -3265,7 +3743,7 @@ namespace NppDarkMode
 					static int roundCornerValue = 0;
 					if (NppDarkMode::isWindows11())
 					{
-						roundCornerValue = 5;
+						roundCornerValue = g_win11CornerRoundness + 1;
 					}
 
 					const bool isHot = (rbBand.uChevronState & STATE_SYSTEM_HOTTRACKED) == STATE_SYSTEM_HOTTRACKED;
@@ -3373,15 +3851,27 @@ namespace NppDarkMode
 			{
 				if (NppDarkMode::isEnabled())
 				{
-					constexpr size_t classNameLen = 16;
-					wchar_t className[classNameLen]{};
-					auto hwndEdit = reinterpret_cast<HWND>(lParam);
-					GetClassName(hwndEdit, className, classNameLen);
-					if (wcscmp(className, WC_EDIT) == 0)
+					auto hChild = reinterpret_cast<HWND>(lParam);
+					const bool isChildEnabled = ::IsWindowEnabled(hChild) == TRUE;
+					std::wstring className = getWndClassName(hChild);
+
+					auto hdc = reinterpret_cast<HDC>(wParam);
+
+					if (className == WC_EDIT)
 					{
-						return NppDarkMode::onCtlColor(reinterpret_cast<HDC>(wParam));
+						if (isChildEnabled)
+						{
+							return NppDarkMode::onCtlColor(hdc);
+						}
+						return NppDarkMode::onCtlColorDlg(hdc);
 					}
-					return NppDarkMode::onCtlColorDlg(reinterpret_cast<HDC>(wParam));
+
+					if (className == WC_LINK)
+					{
+						return NppDarkMode::onCtlColorDlgLinkText(hdc, isChildEnabled);
+					}
+
+					return NppDarkMode::onCtlColorDlg(hdc);
 				}
 				break;
 			}
@@ -3481,7 +3971,7 @@ namespace NppDarkMode
 
 		constexpr ULONG dmfRequiredMask =       dmfSubclassParent | dmfSubclassChildren | dmfSetThemeChildren | dmfSetTitleBar | dmfSetThemeDirectly;
 		//constexpr ULONG dmfAllMask =          dmfSubclassParent | dmfSubclassChildren | dmfSetThemeChildren | dmfSetTitleBar | dmfSetThemeDirectly;
-		
+
 		if (hwnd == nullptr || (dmFlags & dmfRequiredMask) == 0)
 		{
 			return 0;
@@ -4006,7 +4496,7 @@ namespace NppDarkMode
 		::SetBkColor(hdc, NppDarkMode::getErrorBackgroundColor());
 		return reinterpret_cast<LRESULT>(NppDarkMode::getErrorBackgroundBrush());
 	}
-	
+
 	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled)
 	{
 		if (!NppDarkMode::isEnabled())

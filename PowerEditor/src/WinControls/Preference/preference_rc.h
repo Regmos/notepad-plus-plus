@@ -42,7 +42,7 @@
 
 #define IDD_PREFERENCE_SUB_TABBAR                      6040
 
-#define IDD_PREFERENCE_SUB_GENRAL                      6100
+#define IDD_PREFERENCE_SUB_GENERAL                     6100
 
 #define IDC_CHECK_HIDE                                 6102
 #define IDC_RADIO_SMALLICON                            6103
@@ -67,6 +67,8 @@
 #define IDC_CHECK_HIDEMENUBAR                          6122
 #define IDC_LOCALIZATION_GB_STATIC                     6123
 #define IDC_COMBO_LOCALIZATION                         6124
+#define IDC_GB_BEHAVIOR                                6125
+#define IDC_GB_LOOKFEEL                                6126
 
 
 #define IDC_CHECK_TAB_ALTICONS                         6128
@@ -172,7 +174,7 @@
 
 #define IDC_GB_STATIC_CRLF                             6247
 #define IDC_RADIO_ROUNDCORNER_CRLF                     6248
-#define IDC_RADIO_PLEINTEXT_CRLF                       6249
+#define IDC_RADIO_PLAINTEXT_CRLF                       6249
 #define IDC_CHECK_WITHCUSTOMCOLOR_CRLF                 6250
 #define IDC_BUTTON_LAUNCHSTYLECONF_CRLF                6251
 
@@ -248,7 +250,7 @@
 #define IDC_CHECK_CLICKABLELINK_NOUNDERLINE            6320
 #define IDC_EDIT_SESSIONFILEEXT                        6321
 #define IDC_SESSIONFILEEXT_STATIC                      6322
-#define IDC_CHECK_AUTOUPDATE                           6323
+//#define IDC_CHECK_AUTOUPDATE                           6323
 #define IDC_DOCUMENTSWITCHER_STATIC                    6324
 #define IDC_CHECK_UPDATEGOTOEOF                        6325
 #define IDC_CHECK_ENABLSMARTHILITE                     6326
@@ -267,7 +269,6 @@
 #define IDC_CHECK_SMARTHILITEUSEFINDSETTINGS           6339
 #define IDC_CHECK_SMARTHILITEANOTHERRVIEW              6340
 
-
 #define IDC_DOCUMENTPEEK_STATIC                        6344
 #define IDC_CHECK_ENABLEDOCPEEKER                      6345
 #define IDC_CHECK_ENABLEDOCPEEKONMAP                   6346
@@ -283,6 +284,9 @@
 
 #define IDC_COMBO_SC_TECHNOLOGY_CHOICE                 6362
 #define IDC_SC_TECHNOLOGY_STATIC                       6363
+
+#define IDC_COMBO_AUTOUPDATE                           6364
+#define IDC_AUTOUPDATE_STATIC                          6365
 
 #define IDD_PREFERENCE_SUB_NEWDOCUMENT                 6400
 #define IDC_FORMAT_GB_STATIC                           6401
@@ -316,6 +320,7 @@
 #define IDC_DISPLAY_STATIC                             6429
 #define IDC_OPENSAVEDIR_CHECK_DROPFOLDEROPENFILES      6431
 #define IDC_CHECK_ADDNEWDOCONSTARTUP                   6432
+#define IDC_CHECK_USECONTENTASTABNAME                  6433
 
 #define IDD_PREFERENCE_SUB_DEFAULTDIRECTORY            6450
 #define IDD_PREFERENCE_SUB_RECENTFILESHISTORY          6460

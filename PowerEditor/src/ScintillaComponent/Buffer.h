@@ -137,7 +137,7 @@ private:
 
 	int detectCodepage(char* buf, size_t len);
 	bool loadFileData(Document doc, int64_t fileSize, const wchar_t* filename, char* buffer, Utf8_16_Read* UnicodeConvertor, LoadedFileFormat& fileFormat);
-	LangType detectLanguageFromTextBegining(const unsigned char *data, size_t dataLen);
+	LangType detectLanguageFromTextBeginning(const unsigned char *data, size_t dataLen);
 
 	Notepad_plus* _pNotepadPlus = nullptr;
 	ScintillaEditView* _pscratchTilla = nullptr;
@@ -162,13 +162,15 @@ public:
 	Buffer(FileManager * pManager, BufferID id, Document doc, DocFileStatus type, const wchar_t *fileName, bool isLargeFile);
 
 	// this method 1. copies the file name
-	//             2. determinates the language from the ext of file name
+	//             2. determines the language from the ext of file name
 	//             3. gets the last modified time
 	void setFileName(const wchar_t *fn);
 
 	const wchar_t * getFullPathName() const { return _fullPathName.c_str(); }
 
 	const wchar_t * getFileName() const { return _fileName; }
+
+	void normalizeTabName(std::wstring& tabName);
 
 	BufferID getID() const { return _id; }
 
@@ -268,6 +270,9 @@ public:
 		_needLexer = lex;
 		doNotify(BufferChangeLexing);
 	}
+
+	bool isUntitledTabRenamed() const { return _isUntitledTabRenamed; }
+	void setUntitledTabRenamedStatus(bool isRenamed) { _isUntitledTabRenamed = isRenamed; }
 
 	//these two return reference count after operation
 	int addReference(ScintillaEditView * identifier);		//if ID not registered, creates a new Position for that ID and new foldstate
@@ -399,6 +404,8 @@ private:
 	bool _needLexer = false; // new buffers do not need lexing, Scintilla takes care of that
 	//these properties have to be duplicated because of multiple references
 
+	bool _isUntitledTabRenamed = false;
+
 	//All the vectors must have the same size at all times
 	std::vector<ScintillaEditView *> _referees; // Instances of ScintillaEditView which contain this buffer
 	std::vector<Position> _positions;
@@ -425,8 +432,8 @@ private:
 	bool _isModified = false;
 	bool _isLoadedDirty = false; // it's the indicator for finding buffer's initial state
 
-	bool _isUnsync = false; // Buffer should be always dirty (with any undo/redo operation) if the editing buffer is unsyncronized with file on disk.
-	                        // By "unsyncronized" it means :
+	bool _isUnsync = false; // Buffer should be always dirty (with any undo/redo operation) if the editing buffer is unsynchronized with file on disk.
+	                        // By "unsynchronized" it means :
 	                        // 1. the file is deleted outside but the buffer in Notepad++ is kept.
 	                        // 2. the file is modified by another app but the buffer is not reloaded in Notepad++.
 	                        // Note that if the buffer is untitled, there's no correspondent file on the disk so the buffer is considered as independent therefore synchronized.

@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+#include <format>
 #include "AboutDlg.h"
 #include "Parameters.h"
 #include "localization.h"
@@ -29,6 +30,77 @@ using namespace std;
 #ifdef _MSC_VER
 #pragma warning(disable : 4996) // for GetVersion()
 #endif
+
+
+// local DebugInfo helper
+void AppendDisplayAdaptersInfo(wstring& strOut, const unsigned int maxAdaptersIn)
+{
+	strOut += L"\n    installed Display Class adapters: ";
+
+	const wchar_t wszRegDisplayClassWinNT[] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}";
+	HKEY hkDisplayClass = nullptr;
+	LSTATUS lStatus = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegDisplayClassWinNT, 0,
+		KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, &hkDisplayClass);
+	if ((lStatus != ERROR_SUCCESS) || !hkDisplayClass)
+	{
+		strOut += L"\n    - error, failed to open the Registry Display Class key!";
+		return;
+	}
+
+	DWORD dwSubkeysCount = 0;
+	lStatus = ::RegQueryInfoKeyW(hkDisplayClass, nullptr, nullptr, nullptr, &dwSubkeysCount,
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+	if ((lStatus == ERROR_SUCCESS) && (dwSubkeysCount > 0))
+	{
+		DWORD dwAdapterSubkeysFound = 0;
+		for (DWORD i = 0; i < dwSubkeysCount; ++i)
+		{
+			if (dwAdapterSubkeysFound >= maxAdaptersIn)
+			{
+				strOut += L"\n    - warning, search has been limited to maximum number of adapter records: "
+					+ std::to_wstring(maxAdaptersIn);
+				break;
+			}
+
+			wstring strAdapterNo = std::format(L"{:#04d}", i); // 0000, 0001, 0002, etc...
+			wstring strAdapterSubKey = wszRegDisplayClassWinNT;
+			strAdapterSubKey += L'\\' + strAdapterNo;
+			HKEY hkAdapterSubKey = nullptr;
+			lStatus = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, strAdapterSubKey.c_str(), 0, KEY_READ, &hkAdapterSubKey);
+			if ((lStatus == ERROR_SUCCESS) && hkAdapterSubKey)
+			{
+				strAdapterNo.insert(0, L"\n        "); // doubling the output indentation
+				const unsigned int nKeyValMaxLen = 127;
+				const DWORD dwKeyValMaxSize = nKeyValMaxLen * sizeof(wchar_t);
+				wchar_t wszKeyVal[nKeyValMaxLen + 1]{}; // +1 ... to ensure NUL termination
+				DWORD dwType = REG_SZ;
+				DWORD dwSize = dwKeyValMaxSize;
+				if (::RegQueryValueExW(hkAdapterSubKey, L"DriverDesc", nullptr, &dwType, (LPBYTE)wszKeyVal, &dwSize)
+					== ERROR_SUCCESS)
+				{
+					dwAdapterSubkeysFound++;
+					strOut += strAdapterNo + L": Description - ";
+					strOut += wszKeyVal;
+				}
+				// for exact HW identification, query about the "MatchingDeviceId"
+				dwSize = dwKeyValMaxSize;
+				if (::RegQueryValueExW(hkAdapterSubKey, L"DriverVersion", nullptr, &dwType, (LPBYTE)wszKeyVal, &dwSize)
+					== ERROR_SUCCESS)
+				{
+					strOut += strAdapterNo + L": DriverVersion - ";
+					strOut += wszKeyVal;
+				}
+				// to obtain also the above driver date, query about the "DriverDate"
+				::RegCloseKey(hkAdapterSubKey);
+				hkAdapterSubKey = nullptr;
+			}
+		}
+	}
+
+	::RegCloseKey(hkDisplayClass);
+	hkDisplayClass = nullptr;
+}
+
 
 intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -65,10 +137,10 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			//_pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/news/v844-happy-users-edition/";
             //_pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/news/v86-20thyearanniversary";
             //_pageLink.create(::GetDlgItem(_hSelf, IDC_AUTHOR_NAME), L"https://notepad-plus-plus.org/news/v87-about-taiwan/");
+			//_pageLink.create(::GetDlgItem(_hSelf, IDC_AUTHOR_NAME), L"https://notepad-plus-plus.org/news/v881-we-are-with-ukraine/");
             
 			_pageLink.init(_hInst, _hSelf);
-            //_pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/");
-			_pageLink.create(::GetDlgItem(_hSelf, IDC_AUTHOR_NAME), L"https://notepad-plus-plus.org/news/v881-we-are-with-ukraine/");
+            _pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/");
 
 			return TRUE;
 		}
@@ -114,8 +186,8 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			const int iconSize = _dpiManager.scale(80);
 			if (_hIcon == nullptr)
 			{
-				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
-				DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(IDI_WITHUKRAINE), iconSize, iconSize, &_hIcon);
+				DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
+				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(IDI_WITHUKRAINE), iconSize, iconSize, &_hIcon);
 				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_TAIWANSSOVEREIGNTY_DM : IDI_TAIWANSSOVEREIGNTY), iconSize, iconSize, &_hIcon);
 			}
 
@@ -327,6 +399,23 @@ intptr_t CALLBACK DebugInfoDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			// Dark Mode
 			_debugInfoStr += L"Dark Mode : ";
 			_debugInfoStr += nppGui._darkmode._isEnabled ? L"ON" : L"OFF";
+			_debugInfoStr += L"\r\n";
+
+			// Display Info
+			_debugInfoStr += L"Display Info : ";
+			{
+				HDC hdc = ::GetDC(nullptr); // desktop DC
+				if (hdc)
+				{
+					_debugInfoStr += L"\n    primary monitor: " + std::to_wstring(::GetDeviceCaps(hdc, HORZRES));
+					_debugInfoStr += L"x" + std::to_wstring(::GetDeviceCaps(hdc, VERTRES));
+					_debugInfoStr += L", scaling " + std::to_wstring(::GetDeviceCaps(hdc, LOGPIXELSX) * 100 / 96);
+					_debugInfoStr += L"%";
+					::ReleaseDC(nullptr, hdc);
+				}
+				_debugInfoStr += L"\n    visible monitors count: " + std::to_wstring(::GetSystemMetrics(SM_CMONITORS));
+				AppendDisplayAdaptersInfo(_debugInfoStr, 4); // survey up to 4 potential graphics card Registry records
+			}
 			_debugInfoStr += L"\r\n";
 
 			// OS information

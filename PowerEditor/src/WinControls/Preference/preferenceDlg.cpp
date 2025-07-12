@@ -121,7 +121,7 @@ intptr_t CALLBACK PreferenceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 		case WM_INITDIALOG :
 		{
 			_generalSubDlg.init(_hInst, _hSelf);
-			_generalSubDlg.create(IDD_PREFERENCE_SUB_GENRAL, false, false);
+			_generalSubDlg.create(IDD_PREFERENCE_SUB_GENERAL, false, false);
 			_generalSubDlg.display();
 			
 			_toolbarSubDlg.init(_hInst, _hSelf);
@@ -301,7 +301,7 @@ intptr_t CALLBACK PreferenceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			return TRUE;
 		}
 
-		case NPPM_INTERNAL_SETTOOLICONSSET: // Set icons set only option (checkbox) on general sub-dialog, the remained real operations will be done in NppDarkMode::refreshDarkMode
+		case NPPM_INTERNAL_SETTOOLICONSSET: // Set icons set only option (checkbox) on general sub-dialog, the remaining real operations will be done in NppDarkMode::refreshDarkMode
 		{
 			NppParameters& nppParams = NppParameters::getInstance();
 			NppGUI& nppGUI = nppParams.getNppGUI();
@@ -642,7 +642,7 @@ intptr_t CALLBACK GeneralSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 				pair<wstring, wstring> localizationInfo = localizationSwitcher.getElementFromIndex(i);
 				::SendDlgItemMessage(_hSelf, IDC_COMBO_LOCALIZATION, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(localizationInfo.first.c_str()));
 			}
-			wstring lang = L"English"; // Set default language as Englishs
+			wstring lang = L"English"; // Set default language as English
 			if (nppParam.getNativeLangA()) // if nativeLangA is not NULL, then we can be sure the default language (English) is not used
 			{
 				string fn = localizationSwitcher.getFileName();
@@ -713,7 +713,7 @@ intptr_t CALLBACK GeneralSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 						NativeLangSpeaker* pNativeSpeaker = nppParam.getNativeLangSpeaker();
 						pNativeSpeaker->messageBox("Need2Restart2ShowMenuShortcuts",
 							_hSelf,
-							L"Notepad++ needs to be restarted to show right menu shorcuts.",
+							L"Notepad++ needs to be restarted to show right menu shortcuts.",
 							L"Notepad++ need to be restarted",
 							MB_OK | MB_APPLMODAL);
 
@@ -1326,8 +1326,8 @@ intptr_t CALLBACK TabbarSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 
 				case IDC_CHECK_LOCK:
 				{
-					bool islocked = isCheckedOrNot(IDC_CHECK_LOCK);
-					if (islocked)
+					bool isLocked = isCheckedOrNot(IDC_CHECK_LOCK);
+					if (isLocked)
 						nppGUI._tabStatus &= ~TAB_DRAGNDROP;
 					else
 						nppGUI._tabStatus |= TAB_DRAGNDROP;
@@ -1355,7 +1355,7 @@ intptr_t CALLBACK TabbarSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 					else
 						nppGUI._tabStatus &= ~TAB_DRAWINACTIVETAB;
 
-					::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_DRAWINACIVETAB, 0, 0);
+					::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_DRAWINACTIVETAB, 0, 0);
 					return TRUE;
 				}
 
@@ -1542,12 +1542,12 @@ static LRESULT CALLBACK editNumSpaceProc(HWND hwnd, UINT message, WPARAM wParam,
 			bool shift = GetKeyState(VK_SHIFT) & 0x8000;
 
 			bool ctrl_V = (!shift && ctrl && !alt && wParam == 'V');
-			bool shif_INS = (shift && !ctrl && !alt && wParam == VK_INSERT);
-			if ( ctrl_V || shif_INS)
+			bool shift_INS = (shift && !ctrl && !alt && wParam == VK_INSERT);
+			if ( ctrl_V || shift_INS)
 			{
 				canPaste = hasOnlyNumSpaceInClipboard();
 
-				if (shif_INS && !canPaste) // Shift-INS is different from Ctrl-V, it doesn't pass by WM_CHAR afterward, so we stop here
+				if (shift_INS && !canPaste) // Shift-INS is different from Ctrl-V, it doesn't pass by WM_CHAR afterward, so we stop here
 					return TRUE;
 			}
 		}
@@ -1568,7 +1568,7 @@ static LRESULT CALLBACK editNumSpaceProc(HWND hwnd, UINT message, WPARAM wParam,
 
 			if (ctrl_V_in_WM_CHAR)
 			{
-				if (!canPaste) // it's come from ctl_v of WM_KEYDOWN: the format is not correct or nothing to paste, so stop here
+				if (!canPaste) // it comes from Ctrl-V of WM_KEYDOWN: the format is not correct or nothing to paste, so stop here
 				{
 					return TRUE;
 				}
@@ -1583,7 +1583,7 @@ static LRESULT CALLBACK editNumSpaceProc(HWND hwnd, UINT message, WPARAM wParam,
 			}
 			else
 			{
-				if (wParam != VK_BACK && wParam != ' ' && (wParam < '0' || wParam > '9')) // If input char is not number either white space, stop here
+				if (wParam != VK_BACK && wParam != ' ' && (wParam < '0' || wParam > '9')) // If input char is not number or white space, stop here
 				{
 					return TRUE;
 				}
@@ -1800,7 +1800,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 			NppParameters& nppParam = NppParameters::getInstance();
 			ScintillaViewParams& svp = const_cast<ScintillaViewParams&>(nppParam.getSVP());
 
-			// defaul =>  (svp._eolMode == svp.roundedRectangleText)
+			// default =>  (svp._eolMode == svp.roundedRectangleText)
 			bool checkDefaultCRLF = true;
 			bool checkPlainTextCRLF = false;
 			bool checkWithColorCRLF = false;
@@ -1824,7 +1824,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 				checkWithColorCRLF = true;
 			}
 			::SendDlgItemMessage(_hSelf, IDC_RADIO_ROUNDCORNER_CRLF, BM_SETCHECK, checkDefaultCRLF, 0);
-			::SendDlgItemMessage(_hSelf, IDC_RADIO_PLEINTEXT_CRLF, BM_SETCHECK, checkPlainTextCRLF, 0);
+			::SendDlgItemMessage(_hSelf, IDC_RADIO_PLAINTEXT_CRLF, BM_SETCHECK, checkPlainTextCRLF, 0);
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_WITHCUSTOMCOLOR_CRLF, BM_SETCHECK, checkWithColorCRLF, 0);
 
 			
@@ -1938,7 +1938,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 					}
 
 					::EnableWindow(::GetDlgItem(_hSelf, IDC_CHECK_COLUMN2MULTIEDITING), svp._multiSelection);
-					::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_SETMULTISELCTION, 0, 0);
+					::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_SETMULTISELECTION, 0, 0);
 				}
 				return TRUE;
 
@@ -1949,7 +1949,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 				return TRUE;
 
 				case IDC_RADIO_ROUNDCORNER_CRLF:
-				case IDC_RADIO_PLEINTEXT_CRLF:
+				case IDC_RADIO_PLAINTEXT_CRLF:
 				case IDC_CHECK_WITHCUSTOMCOLOR_CRLF:
 				{
 					bool doCustomColor = isCheckedOrNot(IDC_CHECK_WITHCUSTOMCOLOR_CRLF);
@@ -1958,7 +1958,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 					{
 						svp._eolMode = doCustomColor ? svp.roundedRectangleTextCustomColor : svp.roundedRectangleText;
 					}
-					else if (wParam == IDC_RADIO_PLEINTEXT_CRLF)
+					else if (wParam == IDC_RADIO_PLAINTEXT_CRLF)
 					{
 						svp._eolMode = doCustomColor ? svp.plainTextCustomColor : svp.plainText;
 					}
@@ -1968,7 +1968,7 @@ intptr_t CALLBACK Editing2SubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 						{
 							svp._eolMode = doCustomColor ? svp.roundedRectangleTextCustomColor : svp.roundedRectangleText;
 						}
-						else // IDC_RADIO_PLEINTEXT_CRLF
+						else // IDC_RADIO_PLAINTEXT_CRLF
 						{
 							svp._eolMode = doCustomColor ? svp.plainTextCustomColor : svp.plainText;
 						}
@@ -2398,7 +2398,7 @@ intptr_t CALLBACK DarkModeSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 					doEnableCustomizedColorCtrls = enableDarkMode && nppGUI._darkmode._colorTone == NppDarkMode::customizedTone;
 					enableCustomizedColorCtrls(doEnableCustomizedColorCtrls);
 
-					::SendMessage(_hParent, NPPM_INTERNAL_SETTOOLICONSSET, static_cast<WPARAM>(enableDarkMode), 0); // Set icons set only option (checkbox) on general sub-dialog, the remained real operations will be done in NppDarkMode::refreshDarkMode
+					::SendMessage(_hParent, NPPM_INTERNAL_SETTOOLICONSSET, static_cast<WPARAM>(enableDarkMode), 0); // Set icons set only option (checkbox) on general sub-dialog, the remaining real operations will be done in NppDarkMode::refreshDarkMode
 
 					changed = true;
 				}
@@ -2881,10 +2881,10 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 
 				case IDC_CHECK_CHANGHISTORYMARGIN:
 				{
-					bool isMaginJustEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYMARGIN);
+					bool isMarginJustEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYMARGIN);
 					bool isIndicatorAlreadyEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYINDICATOR);
 
-					if (isMaginJustEnabled && !isIndicatorAlreadyEnabled) // In the case that both "in margin" & "in text" were disabled, but "in margin" is just enabled
+					if (isMarginJustEnabled && !isIndicatorAlreadyEnabled) // In the case that both "in margin" & "in text" were disabled, but "in margin" is just enabled
 					{
 						if (!changeHistoryWarningHasBeenGiven)
 						{
@@ -2902,9 +2902,9 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 					}
 					else // otherwise
 					{
-						svp._isChangeHistoryMarginEnabled = isMaginJustEnabled;
-						svp._isChangeHistoryEnabled4NextSession = (!isMaginJustEnabled && !isIndicatorAlreadyEnabled) ? changeHistoryState::disable :
-							(isMaginJustEnabled && isIndicatorAlreadyEnabled) ? changeHistoryState::marginIndicator :changeHistoryState::indicator;
+						svp._isChangeHistoryMarginEnabled = isMarginJustEnabled;
+						svp._isChangeHistoryEnabled4NextSession = (!isMarginJustEnabled && !isIndicatorAlreadyEnabled) ? changeHistoryState::disable :
+							(isMarginJustEnabled && isIndicatorAlreadyEnabled) ? changeHistoryState::marginIndicator :changeHistoryState::indicator;
 
 						::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_ENABLECHANGEHISTORY, 0, 0);
 					}
@@ -2914,9 +2914,9 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 				case IDC_CHECK_CHANGHISTORYINDICATOR:
 				{
 					bool isIndicatorJustEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYINDICATOR);
-					bool isMaginAlreadyEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYMARGIN);
+					bool isMarginAlreadyEnabled = isCheckedOrNot(IDC_CHECK_CHANGHISTORYMARGIN);
 
-					if (isIndicatorJustEnabled && !isMaginAlreadyEnabled) // In the case that both "in margin" & "in text" were disabled, but "in text" is just enabled
+					if (isIndicatorJustEnabled && !isMarginAlreadyEnabled) // In the case that both "in margin" & "in text" were disabled, but "in text" is just enabled
 					{
 						if (!changeHistoryWarningHasBeenGiven)
 						{
@@ -2935,8 +2935,8 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 					else
 					{
 						svp._isChangeHistoryIndicatorEnabled = isIndicatorJustEnabled;
-						svp._isChangeHistoryEnabled4NextSession = (!isIndicatorJustEnabled && !isMaginAlreadyEnabled) ? changeHistoryState::disable :
-							(isIndicatorJustEnabled && isMaginAlreadyEnabled) ? changeHistoryState::marginIndicator : changeHistoryState::margin;
+						svp._isChangeHistoryEnabled4NextSession = (!isIndicatorJustEnabled && !isMarginAlreadyEnabled) ? changeHistoryState::disable :
+							(isIndicatorJustEnabled && isMarginAlreadyEnabled) ? changeHistoryState::marginIndicator : changeHistoryState::margin;
 
 						::SendMessage(::GetParent(_hParent), NPPM_INTERNAL_ENABLECHANGEHISTORY, 0, 0);
 					}
@@ -3088,12 +3088,19 @@ intptr_t CALLBACK MiscSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM)
 
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_DETECTENCODING, BM_SETCHECK, nppGUI._detectEncoding, 0);
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_SAVEALLCONFIRM, BM_SETCHECK, nppGUI._saveAllConfirm, 0);
-			::SendDlgItemMessage(_hSelf, IDC_CHECK_AUTOUPDATE, BM_SETCHECK, nppGUI._autoUpdateOpt._doAutoUpdate, 0);
+
+			::SendDlgItemMessage(_hSelf, IDC_COMBO_AUTOUPDATE, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Disable"));
+			::SendDlgItemMessage(_hSelf, IDC_COMBO_AUTOUPDATE, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Enable on Notepad++ startup"));
+			::SendDlgItemMessage(_hSelf, IDC_COMBO_AUTOUPDATE, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Enable on Notepad++ exit"));
+			if ((nppGUI._autoUpdateOpt._doAutoUpdate < NppGUI::autoupdate_disabled) || (nppGUI._autoUpdateOpt._doAutoUpdate > NppGUI::autoupdate_on_exit))
+				nppGUI._autoUpdateOpt._doAutoUpdate = NppGUI::autoupdate_on_startup;
+			::SendDlgItemMessage(_hSelf, IDC_COMBO_AUTOUPDATE, CB_SETCURSEL, nppGUI._autoUpdateOpt._doAutoUpdate, 0);
+			::ShowWindow(::GetDlgItem(_hSelf, IDC_AUTOUPDATE_STATIC), nppGUI._doesExistUpdater ? SW_SHOW : SW_HIDE);
+			::ShowWindow(::GetDlgItem(_hSelf, IDC_COMBO_AUTOUPDATE), nppGUI._doesExistUpdater ? SW_SHOW : SW_HIDE);
+
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_ENABLEDOCPEEKER, BM_SETCHECK, nppGUI._isDocPeekOnTab ? BST_CHECKED : BST_UNCHECKED, 0);
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_ENABLEDOCPEEKONMAP, BM_SETCHECK, nppGUI._isDocPeekOnMap ? BST_CHECKED : BST_UNCHECKED, 0);
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_MUTE_SOUNDS, BM_SETCHECK, nppGUI._muteSounds ? BST_CHECKED : BST_UNCHECKED, 0);
-
-			::ShowWindow(::GetDlgItem(_hSelf, IDC_CHECK_AUTOUPDATE), nppGUI._doesExistUpdater?SW_SHOW:SW_HIDE);
 
 			::SendDlgItemMessage(_hSelf, IDC_EDIT_SESSIONFILEEXT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(nppGUI._definedSessionExt.c_str()));
 			::SendDlgItemMessage(_hSelf, IDC_EDIT_WORKSPACEFILEEXT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(nppGUI._definedWorkspaceExt.c_str()));
@@ -3182,13 +3189,10 @@ intptr_t CALLBACK MiscSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM)
 				}
 				return TRUE;
 
-				case IDC_CHECK_AUTOUPDATE:
-					nppGUI._autoUpdateOpt._doAutoUpdate = isCheckedOrNot(static_cast<int32_t>(wParam));
-					return TRUE;
-
 				case IDC_CHECK_DETECTENCODING:
 					nppGUI._detectEncoding = isCheckedOrNot(static_cast<int32_t>(wParam));
 					return TRUE;
+
 				case IDC_CHECK_ENABLEDOCSWITCHER :
 				{
 					nppGUI._doTaskList = !nppGUI._doTaskList;
@@ -3294,6 +3298,12 @@ intptr_t CALLBACK MiscSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM)
 						{
 							nppGUI._writeTechnologyEngine = static_cast<writeTechnologyEngine>(::SendDlgItemMessage(_hSelf,
 								IDC_COMBO_SC_TECHNOLOGY_CHOICE, CB_GETCURSEL, 0, 0));
+						}
+
+						else if (LOWORD(wParam) == IDC_COMBO_AUTOUPDATE)
+						{
+							nppGUI._autoUpdateOpt._doAutoUpdate = static_cast<NppGUI::AutoUpdateMode>(::SendDlgItemMessage(_hSelf,
+								IDC_COMBO_AUTOUPDATE, CB_GETCURSEL, 0, 0));
 						}
 					}
 				}
@@ -3419,6 +3429,8 @@ intptr_t CALLBACK NewDocumentSubDlg::run_dlgProc(UINT message, WPARAM wParam, LP
 
 			::SendDlgItemMessage(_hSelf, IDC_CHECK_ADDNEWDOCONSTARTUP, BM_SETCHECK, ndds._addNewDocumentOnStartup, 0);
 
+			::SendDlgItemMessage(_hSelf, IDC_CHECK_USECONTENTASTABNAME, BM_SETCHECK, ndds._useContentAsTabName, 0);
+
 			return TRUE;
 		}
 
@@ -3513,6 +3525,12 @@ intptr_t CALLBACK NewDocumentSubDlg::run_dlgProc(UINT message, WPARAM wParam, LP
 				case IDC_CHECK_ADDNEWDOCONSTARTUP:
 				{
 					ndds._addNewDocumentOnStartup = isCheckedOrNot(IDC_CHECK_ADDNEWDOCONSTARTUP);
+					return TRUE;
+				}
+
+				case IDC_CHECK_USECONTENTASTABNAME:
+				{
+					ndds._useContentAsTabName = isCheckedOrNot(IDC_CHECK_USECONTENTASTABNAME);
 					return TRUE;
 				}
 

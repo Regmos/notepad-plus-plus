@@ -5,7 +5,7 @@ Translation note:
 2. All the comments are for explanation, they are not for translation.
 -->
 <NotepadPlus>
-	<Native-Langue name="Dansk" filename="danish.xml" version="8.8.1">
+	<Native-Langue name="Dansk" filename="danish.xml" version="8.9">
 		<Menu>
 			<Main>
 				<!-- Main Menu Entries -->
@@ -41,6 +41,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="Ved markering"/>
 					<Item subMenuId="edit-multiSelectALL" name="Multimarkér ALLE"/>
 					<Item subMenuId="edit-multiSelectNext" name="MultiMarkér næste"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Skrivebeskyt i Notepad++"/>
 					<Item subMenuId="search-changeHistory" name="Ændringshistorik"/>
 					<Item subMenuId="search-markAll" name="Mærk alle"/>
 					<Item subMenuId="search-markOne" name="Mærk enkelte"/>
@@ -139,6 +140,8 @@ Translation note:
 					<Item id="42081" name="Sortér linier alfabetisk (å > a, ignorér versaler)"/>
 					<Item id="42100" name="Sortér linier efter lokalt sprog (stigende)"/>
 					<Item id="42101" name="Sortér linier efter lokalt sprog (faldende)"/>
+					<Item id="42104" name="Sortér linier efter længde (stigende)"/>
+					<Item id="42105" name="Sortér linier efter længde (faldende)"/>
 					<Item id="42061" name="Sortér linier som heltal (stigende)"/>
 					<Item id="42062" name="Sortér linier som heltal (faldende)"/>
 					<Item id="42063" name="Sortér linier som decimaltal med komma (stigende)"/>
@@ -157,6 +160,7 @@ Translation note:
 					<Item id="42072" name="tilFÆldIGt"/>
 					<Item id="42073" name="Åbn fil"/>
 					<Item id="42074" name="Åbn kildemappe i stifinder"/>
+					<Item id="42106" name="Censurér markering █ (Skift: ●)"/>
 					<Item id="42075" name="Søg online"/>
 					<Item id="42076" name="Skift søgetjeneste..."/>
 					<Item id="42090" name="Ignorér versalfølsom (A/a) og hele ord"/>
@@ -197,6 +201,8 @@ Translation note:
 					<Item id="42026" name="Tekstretning (højre til venstre)"/>
 					<Item id="42027" name="Tekstretning (venstre til højre)"/>
 					<Item id="42028" name="Sæt skrivebeskyttelse"/>
+					<Item id="42102" name="Skrivebeskyt alle dokumenter"/>
+					<Item id="42103" name="Fjern skrivebeskyt alle dokumenter"/>
 					<Item id="42029" name="Aktuel filsti til udklipsholder"/>
 					<Item id="42030" name="Aktuelt filnavn til udklipsholder"/>
 					<Item id="42031" name="Aktuel mappesti til udklipsholder"/>
@@ -416,6 +422,8 @@ Translation note:
 					<Item id="11007" name="Type (Å > A)"/>
 					<Item id="11008" name="Størrelse (stigende)"/>
 					<Item id="11009" name="Størrelse (faldende)"/>
+					<Item id="11010" name="Ændringstid stigende"/>
+					<Item id="11011" name="Ændringstid faldende"/>
 				</Commands>
 			</Main>
 			<TabBar>
@@ -996,6 +1004,7 @@ Translation note:
 					<Item id="6128" name="Ekstra ikoner"/>
 					<Item id="6125" name="Opførsel"/>
 					<Item id="6126" name="Udseende"/>
+					<Item id="6136" name="Fanetitels maks. længde:"/>
 				</Tabbar>
 
 				<Scintillas title="Redigering 1">
@@ -1015,6 +1024,7 @@ Translation note:
 					<Item id="6239" name="Behold markering ved højreklik uden for denne"/>
 					<Item id="6245" name="Aktivér virtuelle mellemrum"/>
 					<Item id="6214" name="Aktivér kopiér/klip linie uden markering"/>
+					<Item id="6266" name="Deaktivér træk og slip markering"/>
 					<Item id="6225" name="Anvend tilpasset farve på markeret tekst"/>
 					<Item id="6651" name="Aktuel linie"/>
 					<Item id="6652" name="Ingen markering"/>
@@ -1214,6 +1224,8 @@ Translation note:
 					<Item id="6909" name="Brug ord under markøren, hvis intet er valgt"/>
 					<Item id="6910" name="Min. antal tegn der automatisk aktiverer &quot;I markering&quot;"/>
 					<Item id="6913" name="Udfyld 'Søg i filer' mappesti fra aktuelt dokument"/>
+					<Item id="6916" name=": Maks. antal markerede tegn indsat automatisk i 'Søg efter'"/>
+					<Item id="6917" name="Søg i filer: Foretræk gemt indhold over ugemt"/>
 				</Searching>
 
 				<RecentFilesHistory title="Historik">
@@ -1579,8 +1591,10 @@ Test kommandoerne og redigér dem, hvis nødvendigt.
 Alternativt kan du geninstallere Notepad++ v8.5.2 og gendanne dine tidligere data.
 Notepad++ vil gemme din gamle &quot;shortcuts.xml&quot; som &quot;shortcuts.xml.v8.5.2.backup&quot;.
 Omdøb &quot;shortcuts.xml.v8.5.2.backup&quot; til &quot;shortcuts.xml&quot; for at gendanne dine kommandoer og bruge dem igen."/><!-- HowToReproduce: Close Notepad++, remove shortcuts.xml.v8.5.2.backup & v852ShortcutsCompatibilityWarning.xml if present, relaunch Notepad++, delete or modify a shortcuts via Shortcut Mapper, close Notepad++, then the message will show up -->
-			<NotEnoughRoom4Saving title="Gemmefejl" message="Filen kunne ikke gemmes.
-Der er tilsyneladende ikke nok ledig plads på disken, så filen blev ikke gemt."/>
+			<FullReadOnlySavingForbidden title="Gem fejlede" message="Kan ikke gemme fil.
+Notepad++ fulde skrivebeskyttelse forhindrede at filen blev gemt."/>
+			<NotEnoughRoom4Saving title="Gem fejlede" message="Kunne ikke gemme fil.
+Der mangler tilsyneladende plads på harddisken, Filen blev ikke gemt."/>
 			<FileInaccessibleUserSession title="File inaccessible" message="Nogle filer fra den manuelt gemte session &quot;$STR_REPLACE$&quot; er utilgængelige. De kan åbnes som tomme og skrivebeskyttede som pladsholdere.
 
 Vil du oprette disse pladsholdere?
@@ -1618,6 +1632,7 @@ Kontrollér dine søgeindstillinger før du fortsætter."/> <!-- HowToReproduce:
 			<ColumnPath name="Sti"/>
 			<ColumnType name="Type"/>
 			<ColumnSize name="Størrelse"/>
+			<ColumnDateTime name="Ændringstid"/>
 			<NbDocsTotal name="Antal dokumenter:"/>
 			<MenuCopyName name="Kopiér navn(e)"/>
 			<MenuCopyPath name="Kopiér placering(er)"/>
@@ -1766,6 +1781,9 @@ Find i alle filer, undtagen i mapperne log med undermapper:
 			<find-status-scope-all value="i hele filen"/>
 			<find-status-scope-backward value="fra filens start til markør"/>
 			<find-status-scope-forward value="fra markør til filens ende"/>
+			<find-status-invisible-chars-findWhat value="Usynlige tegn indsat i &quot;Søg efter&quot; eller &quot;Erstat med&quot; content"/>
+			<find-status-invisible-chars-findWhat-tip value="Advarsel: Usynlige tegn i Søg (eller Erstat) feltet.
+Den indsatte tekst indeholder usynlige tegn (f.eks. linieskift). Fortsætter du uden at slette dem, medtages de i søgningen"/>
 			<finder-find-in-finder value="Søg i resultater..."/>
 			<finder-close-this value="Luk denne søgning"/>
 			<finder-collapse-all value="Sammenfold alle"/>
@@ -1865,7 +1883,8 @@ Klik på &quot;?&quot; for at åbne online manualen."/>
 			<!-- Don't translate "(&quot;Non-printing characters custom color&quot;)" -->
 			<npcCustomColor-tip value="Gå til  Indstillinger => Udseende... for at tilpasse farven for mellemrum og ikke printbare tegn (&quot;Non-printing characters custom color&quot;)."/>
 			<npcIncludeCcUniEol-tip value="Anvend ikke printbare tegns effekter på C0, C1 kontroller og Unicode EOL (næste linie, linieskift og paragraffer) tegn."/>
-			<searchingInSelThresh-tip value="Antal valgte tegn i tekstvinduet, der automatisk sætter flueben ved &quot;I markering&quot; i søgedialogen. Maksimum er 1024. Sæt til 0 for at deaktivere."/>
+			<searchingInSelThresh-tip value="Mindste antal valgte tegn i tekstvinduet, der automatisk sætter flueben ved &quot;I markering&quot; i søgedialogen. Maksimum er $INT_REPLACE$. Sæt til 0 for at deaktivere."/>
+			<searchingFillFindWhat-tip value="Maks. antal valgte tegn i tekstvinduet, der automatisk sætter flueben ved &quot;Søg efter:&quot; når Ctrl-F tastes. Maksimum er $INT_REPLACE$, som er systemets maksimim for &quot;Søg efter:&quot; feltet."/>
 			<verticalEdge-tip value="Angiv kolonnemarkørs placering med et decimaltal. Brug mellemrum til at angive flere markører."/>
 			<fileSaveAsCopySaveButton-tip value="Hold Skift nede, og klik Gem, for at åbne kopien når den er gemt."/>
                         <autoIndentBasic-tip value="Kontrollér at aktuel linies indrykning (f.eks. ny linie med Enter) er den samme som forrige linie."/>
@@ -1889,6 +1908,13 @@ Vælger du avanceret, uden at redigere filer med førnævnte sprog, forbliver in
 			<statusbar-Sel value="Val: "/>
 			<statusbar-Sel-number value="Val"/>
 			<toolbar-accent-tip value="Funktionen bruger Windows farver til at fremhæve dine ikoner på værktøjslinien. Gå til Windows indstillinger &gt; Personlig tilpasning &gt; Farver og vælg din foretrukne farve."/>
+			<len-limit-exceeded-tip value="Din tekst er længere end tilladt. Overskrides grænsen, kan teksten blive forkortet, og gemmes ikke til næste session."/>
+			<max-len-on-search-tip value="Din tekst er længere end tilladt. Overskrides grænsen, kan teksten blive forkortet, og gemmes ikke til næste session."/>		
+			<max-len-on-save-tip value="Denne søgetekst er meget lang, og gemmes måske ikke til næste session."/>
+			<goto-setting-tip value="Dine indstillinger"/>
+			<tabbar-tabcompactlabellen-tip value="Begrænser længden af lange fanetitler. Angiv en værdi mellem 1 og 257 tegn (0 deaktiverer funktionen)."/>
 		</MiscStrings>
 	</Native-Langue>
 </NotepadPlus>
+
+

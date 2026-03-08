@@ -91,6 +91,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		_notepad_plus_plus_core._pluginsManager.disable();
 
 	nppGUI._isCmdlineNosessionActivated = cmdLineParams->_isNoSession;
+	nppGUI._isFullReadOnly = cmdLineParams->_isFullReadOnly;
+	nppGUI._isFullReadOnlySavingForbidden = cmdLineParams->_isFullReadOnlySavingForbidden;
 
 	_hIconAbsent = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICONABSENT));
 
@@ -109,6 +111,14 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	if (NULL == _hSelf)
 		throw std::runtime_error("Notepad_plus_Window::init : CreateWindowEx() function return null");
 
+	if (!cmdLineParams->_pluginMessage.empty())
+	{
+		SCNotification scnN{};
+		scnN.nmhdr.code = NPPN_CMDLINEPLUGINMSG;
+		scnN.nmhdr.hwndFrom = _hSelf;
+		scnN.nmhdr.idFrom = reinterpret_cast<uptr_t>(cmdLineParams->_pluginMessage.c_str());
+		_notepad_plus_plus_core._pluginsManager.notify(&scnN);
+	}
 
 	PaintLocker paintLocker{_hSelf};
 
@@ -159,7 +169,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		if (cmdLineParams->_isNoTab)
 		{
 			// Restore old settings when tab bar has been hidden from tab bar.
-			nppGUI._tabStatus = tabStatusOld;
+			if (!(tabStatusOld & TAB_HIDE))
+				nppGUI._forceTabbarVisible = true;
 		}
 	}
 
@@ -196,73 +207,74 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	if(cmdLineParams->isPointValid() && NppDarkMode::isEnabled())
 		setStartupBgColor(NppDarkMode::getDlgBackgroundColor()); //draw dark background when opening Npp through cmd with position data
 
-	std::vector<wstring> fileNames;
-	std::vector<wstring> patterns;
+	std::vector<std::wstring> fileNames;
+	std::vector<std::wstring> patterns;
 	patterns.push_back(L"*.xml");
 
-	wstring nppDir = nppParams.getNppPath();
+	std::wstring nppDir = nppParams.getNppPath();
 
 	LocalizationSwitcher & localizationSwitcher = nppParams.getLocalizationSwitcher();
 	std::wstring localizationDir = nppDir;
 	pathAppend(localizationDir, L"localization\\");
 
 	_notepad_plus_plus_core.getMatchedFileNames(localizationDir.c_str(), 0, patterns, fileNames, false, false);
-	for (size_t i = 0, len = fileNames.size(); i < len; ++i)
-		localizationSwitcher.addLanguageFromXml(fileNames[i]);
+	for (const auto& fileName : fileNames)
+		localizationSwitcher.addLanguageFromXml(fileName);
 
 	fileNames.clear();
 	ThemeSwitcher & themeSwitcher = nppParams.getThemeSwitcher();
 
-	//  Get themes from both npp install themes dir and app data themes dir with the per user
+	//  Get themes from both npp install themes dir and user data themes dir (AppData, settingsDir, or cloud) with the per user
 	//  overriding default themes of the same name.
 
-	wstring appDataThemeDir = nppParams.isCloud() ? nppParams.getUserPath() : nppParams.getAppDataNppDir();
-	if (!appDataThemeDir.empty())
+	std::wstring userDataThemeDir = nppParams.getUserPath(); // getUserPath will always pick the right settingsDir/Cloud/AppData location
+	if (!userDataThemeDir.empty() && userDataThemeDir != nppDir)	
 	{
-		pathAppend(appDataThemeDir, L"themes\\");
-		_notepad_plus_plus_core.getMatchedFileNames(appDataThemeDir.c_str(), 0, patterns, fileNames, false, false);
-		for (size_t i = 0, len = fileNames.size() ; i < len ; ++i)
+		// append files from userDataThemeDir, unless it matches nppDir (which means the themes are already in the internal structure)
+		pathAppend(userDataThemeDir, L"themes\\");
+		_notepad_plus_plus_core.getMatchedFileNames(userDataThemeDir.c_str(), 0, patterns, fileNames, false, false);
+		for (const auto& fileName: fileNames)
 		{
-			themeSwitcher.addThemeFromXml(fileNames[i]);
+			themeSwitcher.addThemeFromXml(fileName);
 		}
 	}
 
 	fileNames.clear();
 
-	wstring nppThemeDir = nppDir; // <- should use the pointer to avoid the constructor of copy
+	std::wstring nppThemeDir = nppDir; // <- should use the pointer to avoid the constructor of copy
 	pathAppend(nppThemeDir, L"themes\\");
 
 	// Set theme directory to their installation directory
 	themeSwitcher.setThemeDirPath(nppThemeDir);
 
 	_notepad_plus_plus_core.getMatchedFileNames(nppThemeDir.c_str(), 0, patterns, fileNames, false, false);
-	for (size_t i = 0, len = fileNames.size(); i < len ; ++i)
+	for (const auto& fileName : fileNames)
 	{
-		wstring themeName( themeSwitcher.getThemeFromXmlFileName(fileNames[i].c_str()) );
+		std::wstring themeName( themeSwitcher.getThemeFromXmlFileName(fileName.c_str()) );
 		if (!themeSwitcher.themeNameExists(themeName.c_str()))
 		{
-			themeSwitcher.addThemeFromXml(fileNames[i]);
+			themeSwitcher.addThemeFromXml(fileName);
 			
-			if (!appDataThemeDir.empty())
+			if (!userDataThemeDir.empty() && userDataThemeDir != nppDir)
 			{
-				wstring appDataThemePath = appDataThemeDir;
+				std::wstring userDataThemePath = userDataThemeDir;
 
-				if (!doesDirectoryExist(appDataThemePath.c_str()))
+				if (!doesDirectoryExist(userDataThemePath.c_str()))
 				{
-					::CreateDirectory(appDataThemePath.c_str(), NULL);
+					::CreateDirectory(userDataThemePath.c_str(), NULL);
 				}
 
-				wchar_t* fn = PathFindFileName(fileNames[i].c_str());
-				pathAppend(appDataThemePath, fn);
-				themeSwitcher.addThemeStylerSavePath(fileNames[i], appDataThemePath);
+				wchar_t* fn = PathFindFileName(fileName.c_str());
+				pathAppend(userDataThemePath, fn);
+				themeSwitcher.addThemeStylerSavePath(fileName, userDataThemePath);
 			}
 		}
 	}
 
 	if (NppDarkMode::isWindowsModeEnabled())
 	{
-		wstring themePath;
-		wstring xmlFileName = NppDarkMode::getThemeName();
+		std::wstring themePath;
+		std::wstring xmlFileName = NppDarkMode::getThemeName();
 		if (!xmlFileName.empty())
 		{
 			if (!nppParams.isLocal() || nppParams.isCloud())
@@ -297,7 +309,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		::SendMessage(_hSelf, WM_COMMAND, _notepad_plus_plus_core._internalFuncIDs[i], 0);
 
 	std::chrono::steady_clock::duration cmdlineParamsLoadingTime{};
-	std::vector<wstring> fns;
+	std::vector<std::wstring> fns;
 	if (cmdLine)
 	{
 		std::chrono::steady_clock::time_point cmdlineParamsLoadingStartTP = std::chrono::steady_clock::now();
@@ -309,7 +321,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	// To avoid dockable panel toggle problem.
 	if (cmdLineParams->_openFoldersAsWorkspace)
 	{
-		wstring emptyStr;
+		std::wstring emptyStr;
 		_notepad_plus_plus_core.launchFileBrowser(fns, emptyStr, true);
 	}
 	::SendMessage(_hSelf, WM_ACTIVATE, WA_ACTIVE, 0);
@@ -321,6 +333,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	::SendMessage(_hSelf, NPPM_INTERNAL_ENABLECHANGEHISTORY, 0, 0);
 
 	::SendMessage(_hSelf, NPPM_INTERNAL_LINECUTCOPYWITHOUTSELECTION, 0, 0);
+
+	::SendMessage(_hSelf, NPPM_INTERNAL_DISABLESELECTEDTEXTDRAGDROP, 0, 0);
 
 	if (nppGUI._newDocDefaultSettings._addNewDocumentOnStartup && nppGUI._rememberLastSession)
 	{
@@ -365,24 +379,28 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		{
 			if (doesFileExist(cmdLineParams->_easterEggName.c_str()))
 			{
-				std::string content = getFileContent(cmdLineParams->_easterEggName.c_str());
-				WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
-				_userQuote = wmc.char2wchar(content.c_str(), SC_CP_UTF8);
-				if (!_userQuote.empty())
+				bool bLoadingFailed = false;
+				std::string content = getFileContent(cmdLineParams->_easterEggName.c_str(), &bLoadingFailed);
+				if (!bLoadingFailed)
 				{
-					_quoteParams.reset();
-					_quoteParams._quote = _userQuote.c_str();
-					_quoteParams._quoter = L"Anonymous #999";
-					_quoteParams._shouldBeTrolling = false;
-					_quoteParams._lang = cmdLineParams->_langType;
-					if (cmdLineParams->_ghostTypingSpeed == 1)
-						_quoteParams._speed = QuoteParams::slow;
-					else if (cmdLineParams->_ghostTypingSpeed == 2)
-						_quoteParams._speed = QuoteParams::rapid;
-					else if (cmdLineParams->_ghostTypingSpeed == 3)
-						_quoteParams._speed = QuoteParams::speedOfLight;
+					WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
+					_userQuote = wmc.char2wchar(content.c_str(), SC_CP_UTF8);
+					if (!_userQuote.empty())
+					{
+						_quoteParams.reset();
+						_quoteParams._quote = _userQuote.c_str();
+						_quoteParams._quoter = L"Anonymous #999";
+						_quoteParams._shouldBeTrolling = false;
+						_quoteParams._lang = cmdLineParams->_langType;
+						if (cmdLineParams->_ghostTypingSpeed == 1)
+							_quoteParams._speed = QuoteParams::slow;
+						else if (cmdLineParams->_ghostTypingSpeed == 2)
+							_quoteParams._speed = QuoteParams::rapid;
+						else if (cmdLineParams->_ghostTypingSpeed == 3)
+							_quoteParams._speed = QuoteParams::speedOfLight;
 
-					_notepad_plus_plus_core.showQuote(&_quoteParams);
+						_notepad_plus_plus_core.showQuote(&_quoteParams);
+					}
 				}
 			}
 		}
@@ -398,6 +416,11 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		wss << L"Command line params handling: " << std::chrono::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(cmdlineParamsLoadingTime) } << std::endl;
 		wss << L"Total loading time: " << std::chrono::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(nppInitTime + g_pluginsLoadingTime + sessionLoadingTime + cmdlineParamsLoadingTime) };
 		::MessageBoxW(NULL, wss.str().c_str(), L"Notepad++ loading time (hh:mm:ss.ms)", MB_OK);
+	}
+
+	if (cmdLineParams->_displayCmdLineArgs)
+	{
+		_notepad_plus_plus_core.command(IDM_CMDLINEARGUMENTS);
 	}
 
 	bool isSnapshotMode = nppGUI.isSnapshotMode();

@@ -65,6 +65,8 @@ public :
 	void sortFileTypeDSC();
 	void sortFileSizeASC();
 	void sortFileSizeDSC();
+	void sortDateTimeASC();
+	void sortDateTimeDSC();
 	void doRefresh(bool invalidate = false);
 
 public:
@@ -121,9 +123,9 @@ private:
 class WindowsMenu
 {
 public:
-	WindowsMenu() {};
-	~WindowsMenu() {};
-	void init(HMENU hMainMenu); 
+	WindowsMenu() {}
+	~WindowsMenu() {}
+	void init(HMENU hMainMenu);
 	void initPopupMenu(HMENU hMenu, DocTabView *pTab);
 
 private:

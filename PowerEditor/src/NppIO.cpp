@@ -15,12 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-#include <time.h>
+#include <ctime>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include "Notepad_plus_Window.h"
 #include "CustomFileDialog.h"
-#include "EncodingMapper.h"
 #include "VerticalFileSwitcher.h"
 #include "functionListPanel.h"
 #include "ReadDirectoryChanges.h"
@@ -28,6 +27,7 @@
 #include "fileBrowser.h"
 #include <unordered_set>
 #include "Common.h"
+#include "NppConstants.h"
 
 using namespace std;
 
@@ -609,15 +609,21 @@ bool Notepad_plus::doReload(BufferID id, bool alert)
 		_subEditView.restoreCurrentPosPreStep();
 	}
 
+	auto svp = NppParameters::getInstance().getSVP();
+
 	// Once reload is complete, activate buffer which will take care of
 	// many settings such as update status bar, clickable link etc.
 	if ( ((currentView() == MAIN_VIEW) && mainVisible) || ((currentView() == SUB_VIEW) && subVisible))
 	{
 		activateBuffer(id, currentView(), true);
+
+		if (svp._isChangeHistoryMarginEnabled || svp._isChangeHistoryIndicatorEnabled)
+			clearChangesHistory(currentView());
 	}
 	else
 	{
 		// handle also the less usual case when the reloaded buffer is not in the current active view
+
 		int originalActiveView = currentView();
 		BufferID originalActiveBufferID = nullptr;
 		if (mainVisible)
@@ -631,11 +637,10 @@ bool Notepad_plus::doReload(BufferID id, bool alert)
 			activateBuffer(id, SUB_VIEW, true);
 		}
 		activateBuffer(originalActiveBufferID, originalActiveView, true); // set back the original
-	}
 
-	auto svp = NppParameters::getInstance().getSVP();
-	if (svp._isChangeHistoryMarginEnabled || svp._isChangeHistoryIndicatorEnabled)
-		clearChangesHistory();
+		if (svp._isChangeHistoryMarginEnabled || svp._isChangeHistoryIndicatorEnabled)
+			clearChangesHistory(otherView());
+	}
 
 	return res;
 }
@@ -673,7 +678,15 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 		_pluginsManager.notify(&scnN);
 	}
 
-	if (res == SavingStatus::NotEnoughRoom)
+	if (res == SavingStatus::FullReadOnlySavingForbidden)
+	{
+		_nativeLangSpeaker.messageBox("FullReadOnlySavingForbidden",
+			_pPublicInterface->getHSelf(),
+			L"Cannot save file.\nThe Notepad++ full read-only saving forbidden mode prevented the file from being saved.",
+			L"Save failed",
+			MB_OK);
+	}
+	else if (res == SavingStatus::NotEnoughRoom)
 	{
 		_nativeLangSpeaker.messageBox("NotEnoughRoom4Saving",
 			_pPublicInterface->getHSelf(),
@@ -683,8 +696,11 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 	}
 	else if (res == SavingStatus::SaveWritingFailed)
 	{
-		wstring errorMessage = GetLastErrorAsString(GetLastError());
-		::MessageBox(_pPublicInterface->getHSelf(), errorMessage.c_str(), L"Save failed", MB_OK | MB_ICONWARNING);
+		if (!(NppParameters::getInstance()).isEndSessionCritical()) // can we report to the user?
+		{
+			wstring errorMessage = GetLastErrorAsString(::GetLastError());
+			::MessageBox(_pPublicInterface->getHSelf(), errorMessage.c_str(), L"Save failed", MB_OK | MB_ICONWARNING);
+		}
 	}
 	else if (res == SavingStatus::SaveOpenFailed)
 	{
@@ -1045,17 +1061,16 @@ int Notepad_plus::setFileOpenSaveDlgFilters(CustomFileDialog & fDlg, bool showAl
 		l = (NppParameters::getInstance()).getLangFromIndex(i++);
 	}
 	
-	LangType lt = (LangType)langType;
+	const auto lt = static_cast<LangType>(langType);
 	wstring fileUdlString(getLangDesc(lt, true));
 
-	for (size_t u=0; u<(size_t)nppParam.getNbUserLang(); u++)
+	for (size_t u = 0; u < static_cast<size_t>(nppParam.getNbUserLang()); ++u)
 	{
-		UserLangContainer& ulc = nppParam.getULCFromIndex(u);
-		const wchar_t *extList = ulc.getExtention();
-		const wchar_t *lName = ulc.getName();
+		const UserLangContainer* ulc = nppParam.getULCFromIndex(u);
+		const wchar_t* extList = ulc->getExtention();
+		const wchar_t* lName = ulc->getName();
 
-		wstring list(L"");
-		list += extList;
+		std::wstring list = extList;
 
 		wstring stringFilters = exts2Filters(list, showAllExt ? -1 : 40);
 		const wchar_t *filters = stringFilters.c_str();
@@ -2326,7 +2341,6 @@ bool Notepad_plus::fileDelete(BufferID id)
 		doClose(bufferID, SUB_VIEW, isSnapshotMode);
 
 		scnN.nmhdr.code = NPPN_FILEDELETED;
-		scnN.nmhdr.idFrom = (uptr_t)-1;
 		_pluginsManager.notify(&scnN);
 
 		return true;
@@ -2362,10 +2376,12 @@ void Notepad_plus::fileOpen()
 
 void Notepad_plus::fileNew()
 {
-    BufferID newBufID = MainFileManager.newEmptyDocument();
-
-    loadBufferIntoView(newBufID, currentView(), true);	//true, because we want multiple new files if possible
-    switchToFile(newBufID);
+	BufferID newBufID = MainFileManager.newEmptyDocument();
+	if (newBufID != BUFFER_INVALID)
+	{
+		loadBufferIntoView(newBufID, currentView(), true); // true, because we want multiple new files if possible
+		switchToFile(newBufID);
+	}
 }
 
 
@@ -2393,7 +2409,7 @@ bool Notepad_plus::isFileSession(const wchar_t * filename)
 		}
 		usrSessionExt += definedSessionExt;
 
-		if (!wcsicmp(pExt, usrSessionExt.c_str()))
+		if (!_wcsicmp(pExt, usrSessionExt.c_str()))
 		{
 			return true;
 		}
@@ -2417,7 +2433,7 @@ bool Notepad_plus::isFileWorkspace(const wchar_t * filename)
 		}
 		usrWorkspaceExt += definedWorkspaceExt;
 
-		if (!wcsicmp(pExt, usrWorkspaceExt.c_str()))
+		if (!_wcsicmp(pExt, usrWorkspaceExt.c_str()))
 		{
 			return true;
 		}
@@ -2552,7 +2568,8 @@ bool Notepad_plus::loadSession(Session & session, bool isSnapshotMode, const wch
 			if (session._mainViewFiles[i]._encoding != -1)
 				buf->setEncoding(session._mainViewFiles[i]._encoding);
 
-			buf->setUserReadOnly(session._mainViewFiles[i]._isUserReadOnly);
+			buf->setUserReadOnly(session._mainViewFiles[i]._isUserReadOnly || nppGUI._isFullReadOnly || nppGUI._isFullReadOnlySavingForbidden);
+
 			buf->setPinned(session._mainViewFiles[i]._isPinned);
 
 			buf->setUntitledTabRenamedStatus(session._mainViewFiles[i]._isUntitledTabRenamed);
@@ -2689,7 +2706,7 @@ bool Notepad_plus::loadSession(Session & session, bool isSnapshotMode, const wch
 			}
 			buf->setLangType(typeToSet, pLn);
 			buf->setEncoding(session._subViewFiles[k]._encoding);
-			buf->setUserReadOnly(session._subViewFiles[k]._isUserReadOnly);
+			buf->setUserReadOnly(session._subViewFiles[k]._isUserReadOnly || nppGUI._isFullReadOnly || nppGUI._isFullReadOnlySavingForbidden);
 			buf->setPinned(session._subViewFiles[k]._isPinned);
 
 			buf->setUntitledTabRenamedStatus(session._subViewFiles[k]._isUntitledTabRenamed);
@@ -2865,7 +2882,7 @@ const wchar_t * Notepad_plus::fileSaveSession(size_t nbFile, wchar_t ** fileName
 			for (size_t i = 0 ; i < nbFile ; ++i)
 			{
 				if (doesFileExist(fileNames[i]))
-					currentSession._mainViewFiles.push_back(wstring(fileNames[i]));
+					currentSession._mainViewFiles.push_back(sessionFileInfo(fileNames[i]));
 			}
 		}
 		else
@@ -2927,3 +2944,4 @@ void Notepad_plus::saveCurrentSession()
 {
 	::SendMessage(_pPublicInterface->getHSelf(), NPPM_INTERNAL_SAVECURRENTSESSION, 0, 0);
 }
+

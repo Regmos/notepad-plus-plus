@@ -314,7 +314,9 @@ int getGhostTypingSpeedFromParam(ParamVector & params)
 
 const wchar_t FLAG_MULTI_INSTANCE[] = L"-multiInst";
 const wchar_t FLAG_NO_PLUGIN[] = L"-noPlugin";
-const wchar_t FLAG_READONLY[] = L"-ro";
+const wchar_t FLAG_READONLY[] = L"-ro"; // for current cmdline file(s) only
+const wchar_t FLAG_FULL_READONLY[] = L"-fullReadOnly"; // user still can manually toggle OFF the R/O-state of N++ tabs, so saving of the tab filebuffers is possible
+const wchar_t FLAG_FULL_READONLY_SAVING_FORBIDDEN[] = L"-fullReadOnlySavingForbidden"; // user cannot toggle R/O-state of N++ tabs, impossible to save opened tab filebuffers
 const wchar_t FLAG_NOSESSION[] = L"-nosession";
 const wchar_t FLAG_NOTABBAR[] = L"-notabbar";
 const wchar_t FLAG_SYSTRAY[] = L"-systemtray";
@@ -385,17 +387,8 @@ bool launchUpdater(const std::wstring& updaterFullPath, const std::wstring& upda
 	if (today < nppGui._autoUpdateOpt._nextUpdateDate)
 		return false;
 
-	std::wstring updaterParams = L"-v";
-	updaterParams += VERSION_INTERNAL_VALUE;
-
-	if (nppParameters.archType() == IMAGE_FILE_MACHINE_AMD64)
-	{
-		updaterParams += L" -px64";
-	}
-	else if (nppParameters.archType() == IMAGE_FILE_MACHINE_ARM64)
-	{
-		updaterParams += L" -parm64";
-	}
+	std::wstring updaterParams;
+	nppParameters.buildGupParams(updaterParams);
 
 	Process updater(updaterFullPath.c_str(), updaterParams.c_str(), updaterDir.c_str());
 	updater.run();
@@ -408,6 +401,101 @@ bool launchUpdater(const std::wstring& updaterFullPath, const std::wstring& upda
 	return true;
 }
 
+DWORD nppUacSave(const wchar_t* wszTempFilePath, const wchar_t* wszProtectedFilePath2Save)
+{
+	if ((lstrlenW(wszTempFilePath) == 0) || (lstrlenW(wszProtectedFilePath2Save) == 0)) // safe check (lstrlen returns 0 for possible nullptr)
+		return ERROR_INVALID_PARAMETER;
+	if (!doesFileExist(wszTempFilePath))
+		return ERROR_FILE_NOT_FOUND;
+
+	DWORD dwRetCode = ERROR_SUCCESS;
+
+	bool isOutputReadOnly = false;
+	bool isOutputHidden = false;
+	bool isOutputSystem = false;
+	WIN32_FILE_ATTRIBUTE_DATA attributes{};
+	attributes.dwFileAttributes = INVALID_FILE_ATTRIBUTES;
+	if (getFileAttributesExWithTimeout(wszProtectedFilePath2Save, &attributes))
+	{
+		if (attributes.dwFileAttributes != INVALID_FILE_ATTRIBUTES && !(attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			isOutputReadOnly = (attributes.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0;
+			isOutputHidden = (attributes.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+			isOutputSystem = (attributes.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0;
+			if (isOutputReadOnly) attributes.dwFileAttributes &= ~FILE_ATTRIBUTE_READONLY;
+			if (isOutputHidden) attributes.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
+			if (isOutputSystem) attributes.dwFileAttributes &= ~FILE_ATTRIBUTE_SYSTEM;
+			if (isOutputReadOnly || isOutputHidden || isOutputSystem)
+				::SetFileAttributes(wszProtectedFilePath2Save, attributes.dwFileAttributes); // temporarily remove the problematic ones
+		}
+	}
+
+	// cannot use simple MoveFile here as it retains the tempfile permissions when on the same volume...
+	if (!::CopyFileW(wszTempFilePath, wszProtectedFilePath2Save, FALSE))
+	{
+		// fails if the destination file exists and has the R/O and/or Hidden attribute set
+		dwRetCode = ::GetLastError();
+	}
+	else
+	{
+		// ok, now dispose of the tempfile used
+		::DeleteFileW(wszTempFilePath);
+	}
+
+	// set back the possible original file attributes
+	if (isOutputReadOnly || isOutputHidden || isOutputSystem)
+	{
+		if (isOutputReadOnly) attributes.dwFileAttributes |= FILE_ATTRIBUTE_READONLY;
+		if (isOutputHidden) attributes.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+		if (isOutputSystem) attributes.dwFileAttributes |= FILE_ATTRIBUTE_SYSTEM;
+		::SetFileAttributes(wszProtectedFilePath2Save, attributes.dwFileAttributes);
+	}
+
+	return dwRetCode;
+}
+
+DWORD nppUacSetFileAttributes(const DWORD dwFileAttribs, const wchar_t* wszFilePath)
+{
+	if (lstrlenW(wszFilePath) == 0) // safe check (lstrlen returns 0 for possible nullptr)
+		return ERROR_INVALID_PARAMETER;
+	if (!doesFileExist(wszFilePath))
+		return ERROR_FILE_NOT_FOUND;
+	if (dwFileAttribs == INVALID_FILE_ATTRIBUTES || (dwFileAttribs & FILE_ATTRIBUTE_DIRECTORY))
+		return ERROR_INVALID_PARAMETER;
+
+	if (!::SetFileAttributes(wszFilePath, dwFileAttribs))
+		return ::GetLastError();
+
+	return ERROR_SUCCESS;
+}
+
+DWORD nppUacMoveFile(const wchar_t* wszOriginalFilePath, const wchar_t* wszNewFilePath)
+{
+	if ((lstrlenW(wszOriginalFilePath) == 0) || (lstrlenW(wszNewFilePath) == 0)) // safe check (lstrlen returns 0 for possible nullptr)
+		return ERROR_INVALID_PARAMETER;
+	if (!doesFileExist(wszOriginalFilePath))
+		return ERROR_FILE_NOT_FOUND;
+
+	if (!::MoveFileEx(wszOriginalFilePath, wszNewFilePath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH))
+		return ::GetLastError();
+	else
+		return ERROR_SUCCESS;
+}
+
+DWORD nppUacCreateEmptyFile(const wchar_t* wszNewEmptyFilePath)
+{
+	if (lstrlenW(wszNewEmptyFilePath) == 0) // safe check (lstrlen returns 0 for possible nullptr)
+		return ERROR_INVALID_PARAMETER;
+	if (doesFileExist(wszNewEmptyFilePath))
+		return ERROR_FILE_EXISTS;
+
+	Win32_IO_File file(wszNewEmptyFilePath);
+	if (!file.isOpened())
+		return file.getLastErrorCode();
+
+	return ERROR_SUCCESS;
+}
+
 } // namespace
 
 
@@ -417,6 +505,45 @@ std::chrono::steady_clock::time_point g_nppStartTimePoint{};
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
 {
 	g_nppStartTimePoint = std::chrono::steady_clock::now();
+	
+	// Notepad++ UAC OPS /////////////////////////////////////////////////////////////////////////////////////////////
+	if ((lstrlenW(pCmdLine) > 0) && (__argc >= 2)) // safe (if pCmdLine is NULL, lstrlen returns 0)
+	{
+		const wchar_t* wszNppUacOpSign = __wargv[1];
+		if (lstrlenW(wszNppUacOpSign) > lstrlenW(L"#UAC-#"))
+		{
+			if ((__argc == 4) && (wcscmp(wszNppUacOpSign, NPP_UAC_SAVE_SIGN) == 0))
+			{
+				// __wargv[x]: 2 ... tempFilePath, 3  ...  protectedFilePath2Save
+				return static_cast<int>(nppUacSave(__wargv[2], __wargv[3]));
+			}
+
+			if ((__argc == 4) && (wcscmp(wszNppUacOpSign, NPP_UAC_SETFILEATTRIBUTES_SIGN) == 0))
+			{
+				// __wargv[x]: 2 ... dwFileAttributes (string), 3  ...  filePath
+				try
+				{
+					return static_cast<int>(nppUacSetFileAttributes(static_cast<DWORD>(std::stoul(std::wstring(__wargv[2]))), __wargv[3]));
+				}
+				catch ([[maybe_unused]] const std::exception& e)
+				{
+					return static_cast<int>(ERROR_INVALID_PARAMETER); // conversion error (check e.what() for details)
+				}
+			}
+
+			if ((__argc == 4) && (wcscmp(wszNppUacOpSign, NPP_UAC_MOVEFILE_SIGN) == 0))
+			{
+				// __wargv[x]: 2 ... originalFilePath, 3  ...  newFilePath
+				return static_cast<int>(nppUacMoveFile(__wargv[2], __wargv[3]));
+			}
+
+			if ((__argc == 3) && (wcscmp(wszNppUacOpSign, NPP_UAC_CREATEEMPTYFILE_SIGN) == 0))
+			{
+				// __wargv[x]: 2 ... newEmptyFilePath
+				return static_cast<int>(nppUacCreateEmptyFile(__wargv[2]));
+			}
+		}
+	} // Notepad++ UAC OPS////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool TheFirstOne = true;
 	::SetLastError(NO_ERROR);
@@ -438,15 +565,17 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	}
 
 	bool isParamePresent;
-	bool showHelp = isInList(FLAG_HELP, params);
 	bool isMultiInst = isInList(FLAG_MULTI_INSTANCE, params);
 	bool doFunctionListExport = isInList(FLAG_FUNCLSTEXPORT, params);
 	bool doPrintAndQuit = isInList(FLAG_PRINTANDQUIT, params);
 
 	CmdLineParams cmdLineParams;
+	cmdLineParams._displayCmdLineArgs = isInList(FLAG_HELP, params);
 	cmdLineParams._isNoTab = isInList(FLAG_NOTABBAR, params);
 	cmdLineParams._isNoPlugin = isInList(FLAG_NO_PLUGIN, params);
 	cmdLineParams._isReadOnly = isInList(FLAG_READONLY, params);
+	cmdLineParams._isFullReadOnly = isInList(FLAG_FULL_READONLY, params);
+	cmdLineParams._isFullReadOnlySavingForbidden = isInList(FLAG_FULL_READONLY_SAVING_FORBIDDEN, params);
 	cmdLineParams._isNoSession = isInList(FLAG_NOSESSION, params);
 	cmdLineParams._isPreLaunch = isInList(FLAG_SYSTRAY, params);
 	cmdLineParams._alwaysOnTop = isInList(FLAG_ALWAYS_ON_TOP, params);
@@ -464,12 +593,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	std::wstring pluginMessage;
 	if (getParamValFromString(FLAG_PLUGIN_MESSAGE, params, pluginMessage))
 	{
-		if (pluginMessage.length() >= 2)
+		if (pluginMessage.length() >= 2 && (pluginMessage.front() == '"' && pluginMessage.back() == '"'))
 		{
-			if (pluginMessage.front() == '"' && pluginMessage.back() == '"')
-			{
-				pluginMessage = pluginMessage.substr(1, pluginMessage.length() - 2);
-			}
+			pluginMessage = pluginMessage.substr(1, pluginMessage.length() - 2);
 		}
 		cmdLineParams._pluginMessage = pluginMessage;
 	}
@@ -521,9 +647,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 		}
 		cmdLineParams._udlName = udlName;
 	}
-
-	if (showHelp)
-		::MessageBox(NULL, COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK);
 
 	if (cmdLineParams._localizationPath != L"")
 	{
@@ -658,7 +781,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 
 	bool isUpExist = nppGui._doesExistUpdater = doesFileExist(updaterFullPath.c_str());
 
-	// wingup doesn't work with the obsolete security layer (API) under xp since downloads are secured with SSL on notepad_plus_plus.org
+	// wingup doesn't work with the obsolete security layer (API) under xp since downloads are secured with SSL on notepad-plus-plus.org
 	winVer ver = nppParameters.getWinVersion();
 	bool isGtXP = ver > WV_XP;
 

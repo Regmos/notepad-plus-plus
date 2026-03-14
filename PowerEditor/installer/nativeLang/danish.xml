@@ -1585,12 +1585,6 @@ Vil du fortsætte?"/>
 			<LanguageMenuCompactWarning title="Kompakt sprogmenu" message="Aktiveres ved næste programstart."/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Ugemte ændringer kasseres!
 Vil du gemme før du skifter tema?"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
-			<MacroAndRunCmdlWarning title="Mackro og Kør kompabilitet" message="Dine makro og kør kommandoer i Notepad++ v.8.5.2 (og tidligere) er muligvis ikke kompatible med den aktuelle Notepad++.
-Test kommandoerne og redigér dem, hvis nødvendigt.
-
-Alternativt kan du geninstallere Notepad++ v8.5.2 og gendanne dine tidligere data.
-Notepad++ vil gemme din gamle &quot;shortcuts.xml&quot; som &quot;shortcuts.xml.v8.5.2.backup&quot;.
-Omdøb &quot;shortcuts.xml.v8.5.2.backup&quot; til &quot;shortcuts.xml&quot; for at gendanne dine kommandoer og bruge dem igen."/><!-- HowToReproduce: Close Notepad++, remove shortcuts.xml.v8.5.2.backup & v852ShortcutsCompatibilityWarning.xml if present, relaunch Notepad++, delete or modify a shortcuts via Shortcut Mapper, close Notepad++, then the message will show up -->
 			<FullReadOnlySavingForbidden title="Gem fejlede" message="Kan ikke gemme fil.
 Notepad++ fulde skrivebeskyttelse forhindrede at filen blev gemt."/>
 			<NotEnoughRoom4Saving title="Gem fejlede" message="Kunne ikke gemme fil.
